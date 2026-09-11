@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Edit Board Member</title>
+    <style>
+      :root {
+        --bg: #f5f4ff;
+        --panel: #ffffff;
+        --primary: #4d2adf;
+        --secondary: #141E5C;
+        --text: #1d2433;
+        --muted: #5e697d;
+        --border: #eae6f9;
+      }
+
+      * { box-sizing: border-box; }
+
+      body {
+        margin: 0;
+        font-family: Arial, Helvetica, sans-serif;
+        color: var(--text);
+        background: var(--bg);
+      }
+
+      .wrap {
+        max-width: 620px;
+        margin: 40px auto;
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        padding: 22px;
+        box-shadow: 0 15px 28px rgba(20, 30, 92, 0.08);
+      }
+
+      h1 {
+        margin: 0 0 18px;
+        font-size: 1.4rem;
+        color: var(--secondary);
+      }
+
+      form {
+        display: grid;
+        gap: 14px;
+      }
+
+      .field {
+        display: grid;
+        gap: 6px;
+      }
+
+      .image-action {
+        display: flex;
+        justify-content: flex-start;
+      }
+
+      .mini-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: #f4f6ff;
+        color: var(--secondary);
+        border: 1px solid rgba(20, 30, 92, 0.12);
+        border-radius: 999px;
+        padding: 7px 12px;
+        font-size: 0.72rem;
+        font-weight: 700;
+        cursor: pointer;
+      }
+
+      .mini-btn input {
+        display: none;
+      }
+
+      label {
+        font-size: 0.74rem;
+        font-weight: 700;
+        color: var(--secondary);
+      }
+
+      input:not([type="file"]), textarea {
+        width: 100%;
+        border: 1px solid rgba(20, 30, 92, 0.12);
+        border-radius: 10px;
+        padding: 10px 12px;
+        font: inherit;
+        color: var(--text);
+        background: #fff;
+      }
+
+      textarea {
+        min-height: 110px;
+        resize: vertical;
+      }
+
+      .image-preview {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 10px 12px;
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        background: #f8f8ff;
+      }
+
+      .image-preview img {
+        width: 60px;
+        height: 60px;
+        object-fit: cover;
+        border-radius: 12px;
+        border: 1px solid rgba(20, 30, 92, 0.12);
+      }
+
+      .actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 8px;
+        margin-top: 8px;
+      }
+
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border: none;
+        border-radius: 999px;
+        padding: 9px 16px;
+        font: inherit;
+        font-weight: 700;
+        text-decoration: none;
+        cursor: pointer;
+      }
+
+      .btn-primary {
+        background: var(--secondary);
+        color: white;
+      }
+
+      .btn-secondary {
+        background: #f4f6fb;
+        color: var(--secondary);
+        border: 1px solid var(--border);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <h1>Edit Board Member</h1>
+
+      <form method="post" action="{{ url_for('portal_update_bod_member', member_id=member.id) }}" enctype="multipart/form-data">
+        <div class="image-preview">
+          <img src="{{ member.image }}" alt="{{ member.name }}" />
+          <span>Current board member image</span>
+        </div>
+
+        <div class="image-action">
+          <label class="mini-btn">
+            Change Image
+            <input type="file" name="image" accept=".jpg,.jpeg,.png,.webp" />
+          </label>
+        </div>
+
+        <div class="field">
+          <label for="name">Name</label>
+          <input id="name" name="name" value="{{ member.name }}" required />
+        </div>
+
+        <div class="field">
+          <label for="role">Role</label>
+          <input id="role" name="role" value="{{ member.role }}" required />
+        </div>
+
+        <div class="field">
+          <label for="description">Description</label>
+          <textarea id="description" name="description">{{ member.description or '' }}</textarea>
+        </div>
+
+        <div class="actions">
+          <a href="{{ url_for('portal_add_bod') }}" class="btn btn-secondary">Cancel</a>
+          <button type="submit" class="btn btn-primary">Save Changes</button>
+        </div>
+      </form>
+    </div>
+  </body>
+</html>

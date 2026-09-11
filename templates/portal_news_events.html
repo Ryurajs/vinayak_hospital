@@ -1,0 +1,968 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/png" href="/image/fav-icon.png" />
+    <title>News & Events - Vinayak Portal</title>
+    <style>
+      :root {
+        --bg: #f5f4ff;
+        --panel: #ffffff;
+        --primary: #4d2adf;
+        --secondary: #141E5C;
+        --text: #1d2433;
+        --muted: #5e697d;
+        --border: #eae6f9;
+      }
+      * { box-sizing: border-box; }
+      html, body { height: 100%; }
+      body {
+        margin: 0; font-family: Arial, Helvetica, sans-serif; font-size: 0.82rem; color: var(--text); overflow: hidden;
+      }
+      .layout { display: flex; min-height: 100vh; height: 100vh; }
+      .sidebar { width: 250px; background: #F8FAFC; color: #141E5C; padding: 18px 14px; display: flex; flex-direction: column; gap: 18px; transition: width 0.25s ease; overflow: visible; border-right: 1px solid rgba(20, 30, 92, 0.08); position: sticky; top: 0; height: 100vh; flex-shrink: 0; z-index: 1; }
+      .sidebar.collapsed { width: 44px; overflow: visible; }
+      .sidebar-header { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding-bottom: 12px; border-bottom: 1px solid rgba(20, 30, 92, 0.08); }
+      .sidebar-brand { display: flex; align-items: center; justify-content: center; min-height: 42px; }
+      .sidebar-brand img { display: block; max-width: 120px; height: auto; }
+      .nav { display: flex; flex-direction: column; gap: 4px; }
+      .nav-item { display: flex; align-items: center; justify-content: flex-start; gap: 12px; text-decoration: none; color: #141E5C; background: transparent; border-radius: 10px; padding: 12px 12px; font-size: 0.78rem; font-weight: 600; transition: background 0.2s ease; position: relative; }
+      .nav-item:hover { background: rgba(20, 30, 92, 0.04); }
+      .nav-item.active { background: rgba(20, 30, 92, 0.06); }
+      /* Normalize nav item spacing and active/focus behavior to avoid layout shifts */
+      .nav-item.note-button {
+        display: flex; align-items: center; gap: 12px;
+        padding: 12px 12px; box-sizing: border-box;
+        transition: background 0.15s ease, color 0.15s ease;
+      }
+      .nav-item:focus, .nav-item:active, .nav-item:focus-visible,
+      .nav-item.note-button:focus, .nav-item.note-button:active, .nav-item.note-button:focus-visible {
+        outline: none; /* remove default focus outline that may shift layout */
+      }
+      /* `.nav-item.note-button` margin removed; use global `.nav-item` spacing */
+      /* Active/focus states only change background color — no padding/line-height/border changes */
+      .nav-item.active, .nav-item:active, .nav-item:focus-visible,
+      .nav-item.note-button.active, .nav-item.note-button:active, .nav-item.note-button:focus-visible {
+        background: rgba(20, 30, 92, 0.06);
+        color: inherit;
+        border-color: rgba(20, 30, 92, 0.10);
+        box-shadow: 0 6px 18px rgba(20, 30, 92, 0.04);
+      }
+      /* `.nav-item.note-button` margin removed; use global `.nav-item` spacing */
+      .nav-item.note-button:hover { background: #f4f6ff; }
+      .nav-item-wrap { position: relative; display: block; }
+      .nav-item-wrap .nav-item {
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: flex-start;
+        gap: 12px;
+        margin: 0;
+      }
+      .news-events-dropdown {
+        position: absolute;
+        left: calc(100% + 12px);
+        top: -10px;
+        min-width: 150px;
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        box-shadow: 0 14px 30px rgba(20, 30, 92, 0.14);
+        padding: 6px;
+        display: none;
+        flex-direction: column;
+        gap: 4px;
+        z-index: 30;
+      }
+      .nav-item-wrap:hover .news-events-dropdown,
+      .nav-item-wrap:focus-within .news-events-dropdown,
+      .nav-item-wrap.news-events-wrap.open .news-events-dropdown { display: flex; }
+      .news-events-menu-link {
+        width: 100%; border: 0; border-radius: 8px; background: transparent;
+        color: var(--secondary); font-size: 0.74rem; font-weight: 700;
+        text-align: left; padding: 7px 9px; cursor: pointer; display: flex;
+        align-items: center; gap: 8px;
+      }
+      .news-events-menu-link:hover, .news-events-menu-link.active { background: #eef1ff; color: var(--primary); }
+      .news-events-menu-icon { width: 16px; height: 16px; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; color: currentColor; }
+      .news-events-menu-icon svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+      .nav-icon { width: 18px; height: 18px; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; }
+      .nav-icon svg { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+      .sidebar.collapsed .sidebar-brand, .sidebar.collapsed .nav-label { display: none; }
+      .sidebar.collapsed .nav-item { padding: 12px 8px; justify-content: center; }
+      .sidebar.collapsed .nav-item::after { content: attr(data-label); position: absolute; left: calc(100% + 12px); top: 50%; transform: translateY(-50%); background: #fff; color: #141E5C; padding: 10px 16px; border-radius: 10px; border: 1px solid rgba(20, 30, 92, 0.12); font-size: 12px; font-weight: 700; white-space: nowrap; opacity: 0; pointer-events: none; transition: opacity 0.15s ease; box-shadow: 0 10px 22px rgba(20, 30, 92, 0.12); z-index: 50; min-width: 140px; width: max-content; text-align: center; }
+      .sidebar.collapsed .nav-item:hover::after, .sidebar.collapsed .nav-item:focus-visible::after { opacity: 1; }
+      .main-area { flex: 1; display: flex; flex-direction: column; min-width: 0; height: 100vh; overflow: hidden; }
+      .topbar { background: #fff; border-bottom: 1px solid var(--border); padding: 10px 24px; display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-shrink: 0; min-height: 52px; height: 52px; }
+      .brand-wrap { display: flex; align-items: center; gap: 12px; }
+      .sidebar-toggle { border: 1px solid rgba(20, 30, 92, 0.12); background: #f4f6ff; color: #141E5C; width: 36px; height: 36px; border-radius: 6px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; padding: 0; }
+      .sidebar-toggle svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+      .brand { font-weight: 800; letter-spacing: 0.04em; color: #141E5C; line-height: 1.2; font-size: 0.8rem; }
+      .userbar { display: flex; align-items: center; gap: 12px; }
+      .logout { text-decoration: none; color: var(--text); background: #f4f6fb; border: 1px solid var(--border); border-radius: 10px; padding: 9px 14px; font-size: 0.8rem; font-weight: 600; }
+      .container { width: 100%; margin: 0; padding: 18px 24px 42px; overflow-y: auto; flex: 1; }
+      .page-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 0 0 14px; }
+      h1 { margin: 0; font-size: clamp(1.2rem, 1.6vw, 1.5rem); line-height: 1.2; font-weight: 800; letter-spacing: 0.02em; color: #141E5C; }
+      .event-total { display: inline-flex; align-items: center; justify-content: center; padding: 6px 10px; border-radius: 999px; background: #f4f6ff; color: #141E5C; border: 1px solid rgba(20, 30, 92, 0.12); font-size: 0.74rem; font-weight: 700; white-space: nowrap; }
+      .top-card { background: var(--panel); border: 1px solid var(--border); border-radius: 16px; padding: 18px; box-shadow: 0 10px 24px rgba(20, 30, 66, 0.04); margin-bottom: 18px; }
+      .upload-form { display: grid; grid-template-columns: 1.2fr 1fr; gap: 16px; }
+      .field { display: grid; gap: 8px; }
+      label { font-size: 0.75rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); font-weight: 700; }
+      input[type="text"], input[type="file"], input[type="date"], input[type="time"] { width: 100%; padding: 10px 12px; border: 1px solid rgba(20, 30, 92, 0.12); border-radius: 10px; background: #fff; color: var(--text); font-size: 0.82rem; }
+      textarea { width: 100%; min-height: 118px; padding: 10px 12px; border: 1px solid rgba(20, 30, 92, 0.12); border-radius: 10px; background: #fff; color: var(--text); font-size: 0.82rem; resize: vertical; }
+      .submit-btn { align-self: end; padding: 12px 16px; border: none; border-radius: 10px; background: #141E5C; color: #fff; font-weight: 700; cursor: pointer; }
+      .add-card { background: var(--panel); border: 1px solid var(--border); border-radius: 16px; padding: 16px 18px; box-shadow: 0 10px 24px rgba(20, 30, 66, 0.04); margin: 0 0 18px; }
+      .add-card-title { margin: 0 0 12px; font-size: 1rem; font-weight: 800; color: var(--secondary); }
+      .add-card-form { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px; align-items: end; }
+      .add-card-form .field.full { grid-column: 1 / -1; }
+      .add-card-form button { min-height: 30px; border: 0; border-radius: 10px; background: var(--secondary); color: #fff; font-weight: 700; padding: 10px 16px; cursor: pointer; }
+      .file-upload { padding: 8px 10px; }
+      .table-wrap { width: 100%; background: var(--panel); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; box-shadow: 0 10px 24px rgba(20, 30, 66, 0.04); }
+      table { width: 100%; border-collapse: collapse; }
+      th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--border); vertical-align: top; font-size: 0.82rem; }
+      th { background: #f8f8ff; font-size: 0.66rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+      .empty { padding: 26px 18px; color: var(--muted); font-weight: 600; }
+      .event-image { width: 120px; height: 80px; object-fit: cover; border-radius: 10px; border: 1px solid rgba(20, 30, 92, 0.08); }
+      .tabs { display: flex; gap: 10px; margin: 18px 0 14px; flex-wrap: wrap; }
+      .tab-button { border: 1px solid rgba(20, 30, 92, 0.12); background: #fff; color: #141E5C; border-radius: 999px; padding: 10px 16px; font-size: 0.76rem; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; cursor: pointer; }
+      .tab-button.active { background: #141E5C; color: #fff; border-color: #141E5C; }
+      .video-tabs { display: flex; gap: 10px; margin: 0 0 14px; flex-wrap: wrap; }
+      .video-tab { border: 1px solid rgba(20, 30, 92, 0.12); background: #fff; color: #141E5C; border-radius: 999px; padding: 8px 14px; font-size: 0.7rem; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; cursor: pointer; }
+      .video-tab.active { background: #141E5C; color: #fff; border-color: #141E5C; }
+      .tab-panel { display: none; }
+      .tab-panel.active { display: block; }
+      .media-grid { display: grid; grid-template-columns: repeat(auto-fit, 180px); gap: 12px; justify-content: start; }
+      .media-card {
+        position: relative; background: #fff; border: 1px solid var(--border); border-radius: 12px;
+        overflow: hidden; box-shadow: 0 8px 18px rgba(20, 30, 66, 0.03);
+        width: 180px; height: 220px; max-height: 220px; cursor: grab;
+      }
+      .media-card.dragging {
+        opacity: 0.5; cursor: grabbing;
+      }
+      .media-card.drag-target {
+        border: 2px dashed #d32f2f;
+        box-shadow: 0 0 0 4px rgba(211, 47, 47, 0.08);
+      }
+      .media-card-number {
+        position: absolute; top: 8px; left: 8px; z-index: 2;
+        display: inline-flex; align-items: center; justify-content: center;
+        width: 24px; height: 24px; border-radius: 999px;
+        background: rgba(20, 30, 92, 0.82); color: #fff;
+        font-size: 0.7rem; font-weight: 700;
+        box-shadow: 0 8px 18px rgba(20, 30, 92, 0.18);
+      }
+      .media-card img {
+        display: block; width: 100%; height: 100%; object-fit: cover;
+      }
+      .media-card iframe { display: block; width: 100%; height: 100%; min-height: 180px; border: 0; }
+      .media-card-header {
+        position: absolute; left: 8px; right: 8px; bottom: 8px; z-index: 1;
+        padding: 8px 10px; border-radius: 10px;
+        font-size: 0.72rem; font-weight: 700; color: #fff;
+        background: rgba(20, 30, 92, 0.58); backdrop-filter: blur(2px);
+        box-shadow: 0 8px 18px rgba(20, 30, 92, 0.18);
+      }
+      .media-card-body { position: relative; height: 100%; }
+      .action-cell { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+      .action-cell--stacked { align-items: flex-start; }
+      .status-toggle { display: flex; align-items: center; gap: 10px; padding: 6px 8px; border: 1px solid rgba(20, 30, 92, 0.12); border-radius: 10px; background: #f8f8ff; }
+      .status-option { display: inline-flex; align-items: center; gap: 6px; font-size: 0.72rem; color: var(--secondary); font-weight: 700; }
+      .status-option input[type="radio"] { accent-color: #141E5C; }
+      .status-form { display: inline-flex; }
+      .status-submit { border: 1px solid rgba(20, 30, 92, 0.12); background: #fff; color: var(--secondary); border-radius: 8px; padding: 6px 10px; font-size: 0.68rem; font-weight: 700; cursor: pointer; }
+      .icon-button { display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; border: 1px solid rgba(20, 30, 92, 0.12); border-radius: 8px; background: #fff; color: #141E5C; cursor: pointer; text-decoration: none; padding: 0; margin: 0; }
+      .icon-button svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+      .icon-button--edit { color: #0f766e; }
+      .icon-button--delete { color: #b42318; }
+      .icon-button:disabled { opacity: 0.55; cursor: not-allowed; }
+      form { margin: 0; }
+    </style>
+  </head>
+  <body>
+    <div class="layout">
+      <aside class="sidebar" id="portalSidebar">
+        <div class="sidebar-header">
+          <div class="sidebar-brand">
+            <img src="/image/header_logo.svg" alt="Vinayak Hospital logo" />
+          </div>
+        </div>
+        <nav class="nav" aria-label="Sidebar navigation">
+          <a class="nav-item" href="/portal" data-label="Dashboard"><span class="nav-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V20h14V9.5"/><path d="M9 20v-7h6v7"/></svg></span><span class="nav-label">Dashboard</span></a>
+          <a class="nav-item" href="/portal/add-doctors" data-label="Add Doctor"><span class="nav-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 15V7a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v8"/><path d="M16 7h2a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2h-2"/><path d="M8 19a3 3 0 0 1-3-3v-1h6v1a3 3 0 0 1-3 3Z"/><path d="M12 5h6a2 2 0 0 1 2 2v7"/></svg></span><span class="nav-label">Add Doctor</span></a>
+          <a class="nav-item" href="/portal/add-departments" data-label="Add Department"><span class="nav-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19V5a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v14"/><path d="M8 9h8M8 13h8M8 17h5"/><path d="M4 19h16"/></svg></span><span class="nav-label">Add Department</span></a>
+          <a class="nav-item" href="/portal/services" data-label="Our Services"><span class="nav-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v4"/><path d="M12 17v4"/><path d="M4.93 4.93l2.83 2.83"/><path d="M16.24 16.24l2.83 2.83"/><path d="M3 12h4"/><path d="M17 12h4"/><path d="M4.93 19.07l2.83-2.83"/><path d="M16.24 7.76l2.83-2.83"/><circle cx="12" cy="12" r="3"/></svg></span><span class="nav-label">Our Services</span></a>
+          <a class="nav-item" href="/portal/add-health-packages" data-label="Health Packages"><span class="nav-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-8-4.35-8-10a4 4 0 0 1 7-2.65A4 4 0 0 1 20 11c0 5.65-8 10-8 10Z"/><path d="M12 9v4M10 11h4"/></svg></span><span class="nav-label">Health Packages</span></a>
+          <a class="nav-item" href="/portal/add-bod" data-label="Add BOD"><span class="nav-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16 11c1.657 0 3-1.567 3-3.5S17.657 4 16 4s-3 1.567-3 3.5S14.343 11 16 11zM8 11c1.657 0 3-1.567 3-3.5S9.657 4 8 4 5 5.567 5 7.5 6.343 11 8 11zM4 20c0-2.5 3-4 7-4s7 1.5 7 4v1H4v-1z"/></svg></span><span class="nav-label">Add BOD</span></a>
+          <a class="nav-item" href="/portal/suggestion" data-label="Suggestion"><span class="nav-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v18"/><path d="M3 12h18"/><circle cx="12" cy="12" r="8"/></svg></span><span class="nav-label">Suggestion</span></a>
+          <div class="nav-item-wrap news-events-wrap">
+            <a class="nav-item" href="/portal/news-and-event" data-label="News & Events"><span class="nav-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19V7a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v12"/><path d="M8 11h8M8 15h8M8 7h8"/><path d="M4 19h16"/></svg></span><span class="nav-label">News &amp; Events</span></a>
+            <div class="news-events-dropdown">
+              <button type="button" class="news-events-menu-link active" data-panel="add">
+                <span class="news-events-menu-icon">＋</span>
+                <span class="news-events-menu-label">Add Card</span>
+              </button>
+              <button type="button" class="news-events-menu-link" data-panel="image">
+                <span class="news-events-menu-icon">▣</span>
+                <span class="news-events-menu-label">Image Gallery</span>
+              </button>
+              <button type="button" class="news-events-menu-link" data-panel="video">
+                <span class="news-events-menu-icon">▶</span>
+                <span class="news-events-menu-label">Video Gallery</span>
+              </button>
+            </div>
+          </div>
+          <a class="nav-item note-button" href="/portal/add-notes" data-panel="notes" data-label="Add Notes"><span class="nav-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3h7l5 5v13a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Z"/><path d="M14 3v5h5"/><path d="M8 12h8M8 16h8"/></svg></span><span class="nav-label">Add Notes</span></a>
+          <a class="nav-item settings-button" href="/portal/settings" data-label="Settings"><span class="nav-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v3M12 18v3M4.93 4.93l2.12 2.12M16.95 16.95l2.12 2.12M3 12h3M18 12h3M4.93 19.07l2.12-2.12M16.95 7.05l2.12-2.12"/><circle cx="12" cy="12" r="4"/></svg></span><span class="nav-label">Settings</span></a>
+        </nav>
+      </aside>
+
+      <main class="main-area">
+        <header class="topbar">
+          <div class="brand-wrap">
+            <button class="sidebar-toggle" type="button" aria-label="Toggle sidebar" aria-expanded="true">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+            </button>
+            <div class="brand">VINAYAK HOSPITAL &amp; MATERNITY HOME PORTAL</div>
+          </div>
+          <div class="userbar">
+            <a class="logout" href="/portal/logout">Logout</a>
+          </div>
+        </header>
+
+        <div class="container">
+          <div class="page-header">
+            <h1 id="portal-page-heading">News &amp; Events &gt; Card</h1>
+            <span class="event-total">Total Notes: {{ site_notes|length }}</span>
+          </div>
+
+          <div class="tabs">
+            <button type="button" class="tab-button active" data-panel="add">Add Card</button>
+            <button type="button" class="tab-button" data-panel="list">Card List</button>
+          </div>
+
+          <div class="tab-panel active" id="tab-add">
+            <section class="add-card">
+              <div class="add-card-title">Add Card</div>
+              <form class="add-card-form" method="post" action="{{ url_for('portal_news_events_submit') }}" enctype="multipart/form-data">
+                <div class="field">
+                  <label for="title">Title</label>
+                  <input id="title" name="title" type="text" placeholder="News title" required />
+                </div>
+                <div class="field">
+                  <label for="event_type">Event Type</label>
+                  <input id="event_type" name="event_type" type="text" placeholder="Health camp" />
+                </div>
+                <div class="field">
+                  <label for="event_date">Date</label>
+                  <input id="event_date" name="event_date" type="date" />
+                </div>
+                <div class="field">
+                  <label for="location">Location</label>
+                  <input id="location" name="location" type="text" placeholder="Main Hall" />
+                </div>
+                <div class="field">
+                  <label for="image">Image</label>
+                  <input id="image" class="file-upload" name="image" type="file" accept=".jpg,.jpeg,.png,.webp" />
+                </div>
+                <div class="field full">
+                  <label for="description">Description</label>
+                  <textarea id="description" name="description" placeholder="Event details"></textarea>
+                </div>
+                <div class="field">
+                  <button type="submit">Add Event</button>
+                </div>
+              </form>
+            </section>
+          </div>
+
+          <div class="tab-panel" id="tab-list">
+            <div class="table-wrap">
+              {% if news_events %}
+                <table>
+                  <thead>
+                    <tr>
+                      <th>SN</th>
+                      <th>Type</th>
+                      <th>Date (BS)</th>
+                      <th>Location</th>
+                      <th>Title</th>
+                      <th>Media</th>
+                      <th>Description</th>
+                      <th>Action</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% for item in news_events %}
+                      <tr>
+                        <td>{{ loop.index }}</td>
+                        <td>{{ item.event_type or '—' }}</td>
+                        <td>{{ item.event_date or '—' }}</td>
+                        <td>{{ item.location or '—' }}</td>
+                        <td>{{ item.title }}</td>
+                        <td>
+                          {% if item.image_url %}
+                            <img class="event-image" src="{{ item.image_url }}" alt="{{ item.title }}" />
+                          {% endif %}
+                          {% if item.video_url %}
+                            <div style="margin-top: 8px;">
+                              <a href="{{ item.video_url }}" target="_blank" rel="noopener noreferrer">View video</a>
+                            </div>
+                          {% elif not item.image_url %}
+                            —
+                          {% endif %}
+                        </td>
+                        <td>{{ item.description or '—' }}</td>
+                        <td>
+                          <div class="action-cell action-cell--stacked">
+                            {% if item.id %}
+                              <div class="status-toggle">
+                                <label class="status-option">
+                                  <input type="radio" name="is_active" value="1" {% if item.is_active != 0 %}checked{% endif %} form="status-form-{{ item.id }}" />
+                                  <span>Active</span>
+                                </label>
+                                <label class="status-option">
+                                  <input type="radio" name="is_active" value="0" {% if item.is_active == 0 %}checked{% endif %} form="status-form-{{ item.id }}" />
+                                  <span>Inactive</span>
+                                </label>
+                              </div>
+                              <form id="status-form-{{ item.id }}" method="post" action="{{ url_for('portal_news_events_status', event_id=item.id) }}" class="status-form">
+                                <button type="submit" class="status-submit">Save</button>
+                              </form>
+                              <a class="icon-button icon-button--edit" href="{{ url_for('portal_news_event_edit', event_id=item.id) }}" aria-label="Edit {{ item.title }}" title="Edit event">
+                                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 1 1 3 3L7 19l-4 1 1-4 12.5-12.5Z"/></svg>
+                              </a>
+                              <form method="post" action="{{ url_for('portal_news_events_delete', event_id=item.id) }}" onsubmit="return confirm('Delete this event?');">
+                                <button class="icon-button icon-button--delete" type="submit" aria-label="Delete {{ item.title }}" title="Delete event">
+                                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/></svg>
+                                </button>
+                              </form>
+                            {% endif %}
+                          </div>
+                        </td>
+                      </tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
+              {% else %}
+                <div class="empty">No news and events added yet.</div>
+              {% endif %}
+            </div>
+          </div>
+
+          <div class="tab-panel" id="tab-image-add">
+            <section class="add-card">
+              <div class="add-card-title">Add Image</div>
+              <form class="add-card-form" method="post" action="{{ url_for('portal_news_events_submit') }}" enctype="multipart/form-data">
+                <div class="field">
+                  <label for="gallery_header">Header</label>
+                  <input id="gallery_header" name="gallery_header" type="text" placeholder="Image heading" />
+                </div>
+                <div class="field">
+                  <label for="gallery_image">Image</label>
+                  <input id="gallery_image" class="file-upload" name="gallery_image" type="file" accept=".jpg,.jpeg,.png,.webp" />
+                </div>
+                <div class="field">
+                  <button type="submit">Add Image</button>
+                </div>
+              </form>
+            </section>
+          </div>
+
+          <div class="tab-panel" id="tab-image-list">
+            <section class="add-card">
+              <div class="add-card-title">Image List</div>
+              {% if gallery_images %}
+                <div class="media-grid">
+                  {% for image in gallery_images %}
+                    <div class="media-card">
+                      <div class="media-card-body">
+                        <img src="{{ image.src }}" alt="{{ image.alt }}" />
+                      </div>
+                      {% if image.header %}
+                        <div class="media-card-header">{{ image.header }}</div>
+                      {% endif %}
+                    </div>
+                  {% endfor %}
+                </div>
+              {% else %}
+                <div class="empty">No gallery images available yet.</div>
+              {% endif %}
+            </section>
+          </div>
+
+          <div class="video-tabs" style="margin-top: 8px;">
+            <button type="button" class="video-tab active" data-video-panel="video-add">Add Video</button>
+            <button type="button" class="video-tab" data-video-panel="facebook-video-add">Add Facebook Video</button>
+            <button type="button" class="video-tab" data-video-panel="video-list">Video List</button>
+          </div>
+
+          <div class="tab-panel active" id="tab-video-add">
+            <section class="add-card">
+              <form class="add-card-form" method="post" action="{{ url_for('portal_news_events_video_submit') }}" enctype="multipart/form-data">
+                <div class="field">
+                  <label for="video_title">Video Title</label>
+                  <input id="video_title" name="video_title" type="text" placeholder="Community video" />
+                </div>
+                <div class="field full">
+                  <label for="video_uploads">Upload Videos</label>
+                  <input id="video_uploads" class="file-upload" name="video_uploads" type="file" accept="video/mp4,video/webm,video/quicktime,video/x-msvideo,video/ogg" multiple />
+                  <small class="helper-text">Maximum file size: 10 MB each. Up to 10 uploaded videos.</small>
+                </div>
+                <div class="field full">
+                  <button type="submit">Add Videos</button>
+                </div>
+              </form>
+            </section>
+          </div>
+
+          <div class="tab-panel" id="tab-facebook-video-add">
+            <section class="add-card">
+              <form class="add-card-form" method="post" action="{{ url_for('portal_news_events_video_submit') }}" enctype="multipart/form-data">
+                <div class="field" style="max-width: 420px;">
+                  <label>Facebook Video Links</label>
+                  <div id="facebook-link-stack" style="display: flex; flex-direction: column; gap: 10px; width: 100%;">
+                    {% if facebook_video_links %}
+                      {% for link in facebook_video_links %}
+                        <div class="facebook-link-row" style="display: flex; align-items: end; gap: 8px; width: 100%;">
+                          <input name="facebook_video_links" type="url" value="{{ link }}" placeholder="https://facebook.com/reel/..." style="width: 100%; min-width: 0;" />
+                          <div style="display: flex; gap: 6px;">
+                            <button type="button" class="facebook-add-more" aria-label="Add more Facebook link" title="Add more" style="display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; padding: 0; border: 1px solid rgba(20, 30, 92, 0.12); border-radius: 8px; background: #fff; color: #141E5C; cursor: pointer; line-height: 1;">
+                              <svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true" focusable="false"><path d="M12 5v14M5 12h14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
+                            </button>
+                            <button type="button" class="facebook-remove-row" aria-label="Delete Facebook link" title="Delete" style="display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; padding: 0; border: 1px solid rgba(20, 30, 92, 0.12); border-radius: 8px; background: #fff; color: #141E5C; cursor: pointer; line-height: 1;">
+                              <svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true" focusable="false"><path d="M6 7h12M9 7V5h6v2M8 9l.7 8.5A2 2 0 0 0 10.7 19h2.6a2 2 0 0 0 2-1.5L16 9" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                            </button>
+                          </div>
+                        </div>
+                      {% endfor %}
+                    {% else %}
+                      <div class="facebook-link-row" style="display: flex; align-items: end; gap: 8px; width: 100%;">
+                        <input name="facebook_video_links" type="url" placeholder="https://facebook.com/reel/..." style="width: 100%; min-width: 0;" />
+                        <div style="display: flex; gap: 6px;">
+                          <button type="button" class="facebook-add-more" aria-label="Add more Facebook link" title="Add more" style="display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; padding: 0; border: 1px solid rgba(20, 30, 92, 0.12); border-radius: 8px; background: #fff; color: #141E5C; cursor: pointer; line-height: 1;">
+                            <svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true" focusable="false"><path d="M12 5v14M5 12h14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
+                          </button>
+                          <button type="button" class="facebook-remove-row" aria-label="Delete Facebook link" title="Delete" style="display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; padding: 0; border: 1px solid rgba(20, 30, 92, 0.12); border-radius: 8px; background: #fff; color: #141E5C; cursor: pointer; line-height: 1;">
+                            <svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true" focusable="false"><path d="M6 7h12M9 7V5h6v2M8 9l.7 8.5A2 2 0 0 0 10.7 19h2.6a2 2 0 0 0 2-1.5L16 9" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                          </button>
+                        </div>
+                      </div>
+                    {% endif %}
+                  </div>
+                  <small class="helper-text">Add one Facebook video link at a time.</small>
+                  <button type="submit" style="padding: 8px 12px; width: fit-content; min-width: 70px; border: 0; border-radius: 8px; background: #141E5C; color: #fff; font-weight: 700; cursor: pointer; margin-top: 8px;">Save</button>
+                </div>
+              </form>
+            </section>
+          </div>
+
+          <div class="tab-panel" id="tab-note">
+            <div class="notes-layout" style="display:flex;flex-direction:column;align-items:flex-start;gap:18px;">
+              <div class="note-tabs" style="display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-start;align-self:flex-start;">
+                <button type="button" class="tab-button note-tab-button active" data-panel="add">Add Notes</button>
+                <button type="button" class="tab-button note-tab-button" data-panel="list">Notes List</button>
+              </div>
+
+              <section class="add-card" style="width:100%;padding: 18px 18px 20px; margin: 0; border-radius: 14px;">
+                <div class="note-subpanel" id="note-add" style="display:block;">
+                  <form class="add-card-form" method="post" action="{{ url_for('portal_news_events_note_submit') }}" enctype="multipart/form-data" style="max-width:460px; margin:0;">
+                    <div class="field full">
+                      <label for="site_note_image">Note Image</label>
+                      <input id="site_note_image" class="file-upload" name="site_note_image" type="file" accept=".jpg,.jpeg,.png,.webp" required />
+                    </div>
+                    <div class="field">
+                      <label for="display_days">Note Display Duration (days)</label>
+                      <input id="display_days" name="display_days" type="number" min="0" step="1" value="0" placeholder="0" />
+                    </div>
+                    <div class="field">
+                      <button type="submit">Save</button>
+                    </div>
+                  </form>
+                </div>
+
+                <div class="note-subpanel" id="note-list" style="display:none;">
+                  <div style="margin-top:6px;">
+                    {% if site_notes and site_notes|length > 0 %}
+                      <div class="notes-grid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(90px,1fr));gap:8px;align-items:start;">
+                        {% for note in site_notes %}
+                          <div class="note-item-wrap" style="position:relative;max-width:90px;">
+                            <button type="button" class="note-item" data-note-image="{{ note.image_url }}" aria-label="View note {{ loop.index }}" style="background:var(--panel);border:1px solid var(--border);padding:5px;border-radius:8px;display:flex;flex-direction:column;gap:4px;align-items:center;box-shadow:0 1px 2px rgba(20,30,92,0.04);max-width:90px;cursor:pointer;width:100%;">
+                              <img src="{{ note.image_url }}" alt="Note {{ loop.index }}" style="width:100%;height:72px;object-fit:cover;border-radius:6px;display:block;" />
+                              <div style="font-size:0.68rem;color:var(--muted);width:100%;text-align:center;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ note.created_at }}</div>
+                            </button>
+                            <form method="post" action="{{ url_for('portal_delete_site_note', note_id=note.id) }}" class="note-delete-form" style="position:absolute;top:6px;right:6px;margin:0;">
+                              <button type="submit" class="icon-button note-delete-button" aria-label="Delete note {{ loop.index }}" title="Delete note" style="width:24px;height:24px;border:none;border-radius:50%;background:rgba(211,51,51,0.92);color:#fff;display:inline-flex;align-items:center;justify-content:center;padding:0;cursor:pointer;box-shadow:0 4px 10px rgba(211,51,51,0.28);">
+                                <svg viewBox="0 0 24 24" aria-hidden="true" style="width:13px;height:13px;stroke:currentColor;stroke-width:2;fill:none;stroke-linecap:round;stroke-linejoin:round;">
+                                  <path d="M3 6h18"/>
+                                  <path d="M8 6V4h8v2"/>
+                                  <path d="M19 6l-1 14H6L5 6"/>
+                                  <path d="M10 11v6M14 11v6"/>
+                                </svg>
+                              </button>
+                            </form>
+                          </div>
+                        {% endfor %}
+                      </div>
+                    {% else %}
+                      <div class="empty">No notes uploaded yet.</div>
+                    {% endif %}
+                  </div>
+                </div>
+              </section>
+            </div>
+          </div>
+
+          <div class="tab-panel" id="tab-video-list">
+            <section class="add-card">
+              {% set has_uploaded_videos = uploaded_gallery_videos | length > 0 %}
+              {% set has_facebook_videos = facebook_gallery_videos | length > 0 %}
+              {% if has_uploaded_videos or has_facebook_videos %}
+                {% if has_uploaded_videos %}
+                  <div class="media-section" data-media-section="uploaded" style="margin-bottom: 18px;">
+                    <h4 style="margin: 0 0 12px; font-size: 1rem; color: #141E5C;">Uploaded Videos</h4>
+                    <div class="media-grid">
+                      {% for video in uploaded_gallery_videos %}
+                        <div class="media-card" draggable="true" data-video-id="{{ video.id if video.id is defined and video.id is not none else (video.href or video.embedUrl or ('video-' ~ loop.index)) }}" data-video-type="uploaded">
+                          <span class="media-card-number">{{ loop.index }}</span>
+                          {% if video.embedUrl %}
+                            <iframe src="{{ video.embedUrl }}" title="{{ video.title }}" loading="lazy" allow="encrypted-media; picture-in-picture; web-share" allowfullscreen></iframe>
+                          {% else %}
+                            <video controls preload="none" muted playsinline autoplay="false" disablepictureinpicture webkit-playsinline style="width: 100%; height: 100%; object-fit: cover; background: #000;">
+                              <source src="{{ video.href }}" />
+                            </video>
+                          {% endif %}
+                        </div>
+                      {% endfor %}
+                    </div>
+                  </div>
+                {% endif %}
+
+                {% if has_facebook_videos %}
+                  <div class="media-section" data-media-section="facebook">
+                    <h4 style="margin: 0 0 12px; font-size: 1rem; color: #141E5C;">Facebook Videos</h4>
+                    <div class="media-grid">
+                      {% for video in facebook_gallery_videos %}
+                        <div class="media-card" draggable="true" data-video-id="{{ video.id if video.id is defined and video.id is not none else (video.href or video.embedUrl or ('facebook-video-' ~ loop.index)) }}" data-video-type="facebook">
+                          <span class="media-card-number">{{ loop.index }}</span>
+                          {% if video.embedUrl %}
+                            <iframe src="{{ video.embedUrl }}" title="{{ video.title }}" loading="lazy" allow="encrypted-media; picture-in-picture; web-share" allowfullscreen></iframe>
+                          {% else %}
+                            <img src="{{ video.thumbnail or '/image/fav-icon.png' }}" alt="{{ video.title }}" />
+                          {% endif %}
+                        </div>
+                      {% endfor %}
+                    </div>
+                  </div>
+                {% endif %}
+              {% else %}
+                <div class="empty">No gallery videos available yet.</div>
+              {% endif %}
+            </section>
+          </div>
+
+        </div>
+      </main>
+    </div>
+
+    <div id="note-lightbox" style="position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(10,14,24,0.78);z-index:2000;padding:20px;">
+      <div style="position:relative;max-width:min(90vw, 780px);width:100%;background:#fff;border-radius:18px;padding:12px;box-shadow:0 18px 46px rgba(0,0,0,0.25);">
+        <button type="button" id="note-lightbox-close" aria-label="Close note image" style="position:absolute;top:10px;right:12px;border:none;background:#141E5C;color:#fff;border-radius:50%;width:32px;height:32px;cursor:pointer;font-size:1.1rem;line-height:1;">×</button>
+        <img id="note-lightbox-image" alt="Expanded note" style="display:block;width:100%;max-height:80vh;object-fit:contain;border-radius:12px;background:#f6f7fb;" />
+      </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+      const noteButtons = document.querySelectorAll('.note-item[data-note-image]');
+      const noteLightbox = document.getElementById('note-lightbox');
+      const noteLightboxImage = document.getElementById('note-lightbox-image');
+      const noteLightboxClose = document.getElementById('note-lightbox-close');
+
+      document.querySelectorAll('.note-delete-form').forEach((form) => {
+        form.addEventListener('submit', (event) => {
+          event.preventDefault();
+          Swal.fire({
+            title: 'Delete note?',
+            text: 'This note image will be removed permanently.',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#4d2adf',
+            confirmButtonText: 'Yes, delete it',
+            cancelButtonText: 'Cancel',
+          }).then((result) => {
+            if (result.isConfirmed) {
+              form.submit();
+            }
+          });
+        });
+      });
+
+      noteButtons.forEach((button) => {
+        button.addEventListener('click', () => {
+          const src = button.dataset.noteImage;
+          if (!src || !noteLightbox || !noteLightboxImage) return;
+          noteLightboxImage.src = src;
+          noteLightbox.style.display = 'flex';
+        });
+      });
+
+      if (noteLightboxClose) {
+        noteLightboxClose.addEventListener('click', () => {
+          if (!noteLightbox) return;
+          noteLightbox.style.display = 'none';
+          noteLightboxImage.src = '';
+        });
+      }
+
+      if (noteLightbox) {
+        noteLightbox.addEventListener('click', (event) => {
+          if (event.target === noteLightbox) {
+            noteLightbox.style.display = 'none';
+            noteLightboxImage.src = '';
+          }
+        });
+      }
+
+      const sidebar = document.getElementById('portalSidebar');
+      const toggleButton = document.querySelector('.sidebar-toggle');
+      function setToggleIcon(isCollapsed) {
+        if (!toggleButton) return;
+        const iconMarkup = isCollapsed ? '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>' : '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg>';
+        toggleButton.innerHTML = iconMarkup;
+        toggleButton.setAttribute('aria-expanded', String(!isCollapsed));
+      }
+      if (sidebar && toggleButton) {
+        setToggleIcon(false);
+        toggleButton.addEventListener('click', () => {
+          const isCollapsed = sidebar.classList.toggle('collapsed');
+          setToggleIcon(isCollapsed);
+        });
+      }
+
+      const newsWrap = document.querySelector('.news-events-wrap');
+      const newsDropdown = document.querySelector('.news-events-dropdown');
+      const newsMainLink = document.querySelector('.news-events-wrap .nav-item');
+      const newsDropLinks = document.querySelectorAll('.news-events-menu-link');
+      const notesNavItem = document.querySelector('[data-panel="notes"]');
+      const tabButtons = document.querySelectorAll('.tabs .tab-button');
+      const tabPanels = document.querySelectorAll('.tab-panel');
+      const videoTabs = document.querySelectorAll('.video-tab');
+      const pageHeading = document.getElementById('portal-page-heading');
+
+      const facebookLinkStack = document.getElementById('facebook-link-stack');
+      if (facebookLinkStack) {
+        facebookLinkStack.addEventListener('click', (event) => {
+          const addTrigger = event.target.closest('.facebook-add-more');
+          if (addTrigger) {
+            const row = addTrigger.closest('.facebook-link-row');
+            if (!row) return;
+
+            const clone = row.cloneNode(true);
+            const cloneInput = clone.querySelector('input');
+            if (cloneInput) cloneInput.value = '';
+            facebookLinkStack.appendChild(clone);
+            return;
+          }
+
+          const removeTrigger = event.target.closest('.facebook-remove-row');
+          if (removeTrigger) {
+            const row = removeTrigger.closest('.facebook-link-row');
+            if (!row) return;
+            if (facebookLinkStack.querySelectorAll('.facebook-link-row').length <= 1) return;
+            row.remove();
+          }
+        });
+      }
+
+      // Leave News & Events dropdown visibility to CSS hover/focus rules.
+      // Do not programmatically add/remove the "open" class or toggle
+      // inline styles here so the sidebar layout remains stable when
+      // navigating or clicking menu items.
+
+      const mediaGrids = document.querySelectorAll('.media-grid');
+      let draggingCard = null;
+
+      document.querySelectorAll('video').forEach((videoEl) => {
+        videoEl.muted = true;
+        videoEl.autoplay = false;
+        videoEl.playsInline = true;
+        videoEl.pause();
+        videoEl.load();
+      });
+
+      mediaGrids.forEach((grid) => {
+        grid.addEventListener('dragstart', (event) => {
+          const card = event.target.closest('.media-card');
+          if (!card) return;
+          const videoId = String(card.dataset.videoId || '').trim();
+          if (!videoId) return;
+
+          draggingCard = card;
+          card.classList.add('dragging');
+          event.dataTransfer.effectAllowed = 'move';
+          event.dataTransfer.setData('text/plain', videoId);
+        });
+
+        grid.addEventListener('dragover', (event) => {
+          if (!draggingCard) return;
+          const targetCard = event.target.closest('.media-card');
+          if (!targetCard || targetCard === draggingCard) return;
+          event.preventDefault();
+          event.dataTransfer.dropEffect = 'move';
+
+          grid.querySelectorAll('.media-card.drag-target').forEach((card) => card.classList.remove('drag-target'));
+          targetCard.classList.add('drag-target');
+        });
+
+        grid.addEventListener('dragleave', (event) => {
+          const targetCard = event.target.closest('.media-card');
+          if (targetCard) {
+            targetCard.classList.remove('drag-target');
+          }
+        });
+
+        grid.addEventListener('drop', async (event) => {
+          if (!draggingCard) return;
+          const targetCard = event.target.closest('.media-card');
+          if (!targetCard || targetCard === draggingCard) return;
+          event.preventDefault();
+
+          const cards = Array.from(grid.querySelectorAll('.media-card[data-video-id]'));
+          const sourceIndex = cards.indexOf(draggingCard);
+          const targetIndex = cards.indexOf(targetCard);
+          if (sourceIndex === -1 || targetIndex === -1) return;
+
+          const sourceId = String(draggingCard.dataset.videoId || '').trim();
+          const targetId = String(targetCard.dataset.videoId || '').trim();
+          if (!sourceId || !targetId) return;
+
+          const nextOrder = cards.map((card) => String(card.dataset.videoId || '').trim()).filter(Boolean);
+          const sourcePos = nextOrder.indexOf(sourceId);
+          const targetPos = nextOrder.indexOf(targetId);
+          if (sourcePos === -1 || targetPos === -1) return;
+
+          nextOrder.splice(sourcePos, 1);
+          nextOrder.splice(targetPos, 0, sourceId);
+
+          if (sourceIndex < targetIndex) {
+            grid.insertBefore(draggingCard, targetCard.nextElementSibling);
+          } else {
+            grid.insertBefore(draggingCard, targetCard);
+          }
+
+          try {
+            const response = await fetch('/portal/news-and-event/videos/reorder', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ video_ids: nextOrder }),
+              credentials: 'same-origin',
+            });
+            if (response.ok) {
+              const videos = Array.from(grid.querySelectorAll('video, iframe'));
+              videos.forEach((videoEl) => {
+                if (typeof videoEl.pause === 'function') {
+                  videoEl.pause();
+                }
+              });
+            }
+          } catch (error) {
+            console.error('Failed to reorder videos', error);
+          }
+        });
+
+        grid.addEventListener('dragend', () => {
+          if (draggingCard) {
+            draggingCard.classList.remove('dragging');
+          }
+          grid.querySelectorAll('.media-card.drag-target').forEach((card) => card.classList.remove('drag-target'));
+          draggingCard = null;
+        });
+      });
+
+      const switchPanel = (selectedPanel) => {
+        const normalizedPanel = selectedPanel === 'video' ? 'video-add' : selectedPanel;
+        const paneMap = {
+          add: 'tab-add',
+          list: 'tab-list',
+          image: 'tab-image-add',
+          'image-list': 'tab-image-list',
+          notes: 'tab-note',
+          video: 'tab-video-add',
+          'video-add': 'tab-video-add',
+          'video-list': 'tab-video-list',
+          'facebook-video': 'tab-facebook-video-add',
+          'facebook-video-add': 'tab-facebook-video-add',
+        };
+        const selectedId = paneMap[normalizedPanel] || 'tab-add';
+        if (normalizedPanel) {
+          localStorage.setItem('portalNewsEventsPanel', normalizedPanel);
+        }
+
+        const tabLabelMap = {
+          add: ['Add Card', 'Card List'],
+          list: ['Add Card', 'Card List'],
+          image: ['Add Image', 'Image List'],
+          'image-list': ['Add Image', 'Image List'],
+          video: ['Add Video', 'Add Facebook Video', 'Video List'],
+          'video-add': ['Add Video', 'Add Facebook Video', 'Video List'],
+          'video-list': ['Add Video', 'Add Facebook Video', 'Video List'],
+          'facebook-video': ['Add Video', 'Add Facebook Video', 'Video List'],
+          'facebook-video-add': ['Add Video', 'Add Facebook Video', 'Video List'],
+        };
+
+        const pageTitles = {
+          add: 'News & Events > Card',
+          list: 'News & Events > Card',
+          image: 'News & Events > Image Gallery',
+          'image-list': 'News & Events > Image Gallery',
+          notes: 'Notes',
+          video: 'News & Events > Video Gallery',
+          'video-add': 'News & Events > Video Gallery',
+          'video-list': 'News & Events > Video Gallery',
+          'facebook-video': 'News & Events > Video Gallery',
+          'facebook-video-add': 'News & Events > Video Gallery',
+        };
+
+        const currentPanel = normalizedPanel || 'add';
+
+        tabPanels.forEach((panel) => {
+          const isActive = panel.id === selectedId;
+          panel.classList.toggle('active', isActive);
+          panel.style.display = isActive ? 'block' : 'none';
+        });
+
+        const isVideoSection = currentPanel === 'video' || currentPanel === 'video-add' || currentPanel === 'video-list' || currentPanel === 'facebook-video' || currentPanel === 'facebook-video-add';
+        const isImageGallerySection = currentPanel === 'image' || currentPanel === 'image-list';
+        const showVideoSubTabs = isVideoSection;
+        const videoTabsContainer = document.querySelector('.video-tabs');
+
+        tabButtons.forEach((tabButton) => {
+          // Hide the main Add/Card List tabs for image/video sections and for the Notes panel
+          const shouldShowMainTabs = !(isImageGallerySection || isVideoSection || currentPanel === 'notes');
+          tabButton.style.display = shouldShowMainTabs ? 'inline-flex' : 'none';
+        });
+
+        if (!isVideoSection && !isImageGallerySection) {
+          const labels = tabLabelMap[currentPanel] || tabLabelMap.add;
+          tabButtons.forEach((tabButton, index) => {
+            tabButton.textContent = labels[index] || labels[0];
+            tabButton.dataset.panel = index === 0 ? (currentPanel === 'list' ? 'add' : currentPanel === 'image' || currentPanel === 'image-list' ? 'image' : 'add') : (currentPanel === 'image' || currentPanel === 'image-list' ? 'image-list' : 'list');
+            tabButton.classList.toggle('active', tabButton.dataset.panel === currentPanel || (index === 0 && currentPanel === 'add') || (index === 1 && currentPanel === 'list'));
+          });
+        }
+
+        if (videoTabsContainer) {
+          videoTabsContainer.style.display = showVideoSubTabs ? 'flex' : 'none';
+        }
+
+        if (newsMainLink) {
+          newsMainLink.classList.remove('active');
+        }
+
+        if (notesNavItem) {
+          notesNavItem.classList.toggle('active', currentPanel === 'notes');
+        }
+
+        // Keep the news group state controlled by CSS/hover only.
+        // Do not change `newsWrap` or `newsDropdown` here to avoid
+        // altering the sidebar appearance when switching panels.
+
+        videoTabs.forEach((tab) => {
+          const targetPanel = tab.dataset.videoPanel;
+          const isActive = targetPanel === currentPanel || (currentPanel === 'video-list' && targetPanel === 'video-list') || (currentPanel === 'video-add' && targetPanel === 'video-add') || (currentPanel === 'facebook-video-add' && targetPanel === 'facebook-video-add');
+          tab.classList.toggle('active', isActive);
+          tab.style.display = showVideoSubTabs ? 'inline-flex' : 'none';
+        });
+
+        if (pageHeading) {
+          pageHeading.textContent = pageTitles[currentPanel] || pageTitles.add;
+        }
+
+        newsDropLinks.forEach((menuLink) => {
+          const isSelected = menuLink.dataset.panel === currentPanel || (
+            currentPanel === 'image' && menuLink.dataset.panel === 'image'
+          ) || (
+            currentPanel === 'video' && menuLink.dataset.panel === 'video'
+          ) || (
+            currentPanel === 'video-add' && menuLink.dataset.panel === 'video'
+          ) || (
+            currentPanel === 'image-list' && menuLink.dataset.panel === 'image'
+          ) || (
+            currentPanel === 'video-list' && menuLink.dataset.panel === 'video'
+          ) || (
+            currentPanel === 'facebook-video' && menuLink.dataset.panel === 'video'
+          ) || (
+            currentPanel === 'facebook-video-add' && menuLink.dataset.panel === 'video'
+          );
+          menuLink.classList.toggle('active', isSelected);
+        });
+      };
+
+      if (newsMainLink) {
+        newsMainLink.addEventListener('click', () => {
+          localStorage.setItem('portalNewsEventsPanel', 'add');
+          switchPanel('add');
+          // Keep the actual anchor navigation and URL in sync with the page.
+        });
+      }
+
+      newsDropLinks.forEach((link) => {
+        link.addEventListener('click', () => {
+          localStorage.setItem('portalNewsEventsPanel', link.dataset.panel || 'add');
+          switchPanel(link.dataset.panel);
+          // Keep dropdown controlled by hover/focus; do not change sidebar.
+        });
+      });
+
+      tabButtons.forEach((button) => {
+        button.addEventListener('click', () => {
+          const mode = button.dataset.panel;
+          const selectedKey = mode === 'image' ? 'image' : mode === 'image-list' ? 'image-list' : mode === 'video' ? 'video-add' : mode === 'video-list' ? 'video-list' : mode === 'facebook-video' ? 'facebook-video-add' : button.dataset.panel;
+          switchPanel(selectedKey);
+        });
+      });
+
+      videoTabs.forEach((button) => {
+        button.addEventListener('click', () => {
+          const mode = button.dataset.videoPanel;
+          const selectedKey = mode === 'video-add' ? 'video-add' : mode === 'facebook-video-add' ? 'facebook-video-add' : 'video-list';
+          switchPanel(selectedKey);
+        });
+      });
+
+      const initialPanel = {{ initial_panel|tojson if initial_panel is defined else '"add"' }};
+      const savedPanel = initialPanel || localStorage.getItem('portalNewsEventsPanel') || 'add';
+      if (savedPanel) {
+        localStorage.setItem('portalNewsEventsPanel', savedPanel);
+        switchPanel(savedPanel);
+      }
+      
+    </script>
+    <script>
+      // Notes sub-tab control
+      (function () {
+        const noteTabButtons = document.querySelectorAll('.note-tab-button');
+        const noteSubPanels = document.querySelectorAll('.note-subpanel');
+
+        function showNotePanel(name) {
+          noteTabButtons.forEach((btn) => btn.classList.toggle('active', btn.dataset.panel === name));
+          noteSubPanels.forEach((panel) => {
+            panel.style.display = panel.id === 'note-' + name ? 'block' : 'none';
+          });
+          try { localStorage.setItem('portalNewsEventsNotePanel', name); } catch (e) {}
+        }
+
+        noteTabButtons.forEach((btn) => {
+          btn.addEventListener('click', () => showNotePanel(btn.dataset.panel));
+        });
+
+        // Initialize from storage or default to 'add'
+        const saved = (function () { try { return localStorage.getItem('portalNewsEventsNotePanel'); } catch (e) { return null; } })() || 'add';
+        showNotePanel(saved);
+      })();
+    </script>
+  </body>
+</html>

@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/png" href="/image/fav-icon.png" />
+    <title>Our Services - Vinayak Portal</title>
+    <style>
+      :root {
+        --bg: #f5f4ff;
+        --panel: #ffffff;
+        --primary: #4d2adf;
+        --primary-soft: #eef0ff;
+        --secondary: #141E5C;
+        --text: #1d2433;
+        --muted: #5e697d;
+        --border: #eae6f9;
+        --green: #178a59;
+      }
+
+      * { box-sizing: border-box; }
+      html, body { height: 100%; }
+      body {
+        margin: 0;
+        font-family: Arial, Helvetica, sans-serif;
+        font-size: 0.82rem;
+        color: var(--text);
+        overflow: hidden;
+      }
+
+      .layout { display: flex; min-height: 100vh; height: 100vh; }
+      .sidebar {
+        width: 250px; background: #F8FAFC; color: #141E5C; padding: 18px 14px;
+        display: flex; flex-direction: column; gap: 18px; transition: width 0.25s ease;
+        overflow: visible; border-right: 1px solid rgba(20, 30, 92, 0.08); position: sticky; top: 0; height: 100vh; flex-shrink: 0; z-index: 1;
+      }
+      .sidebar.collapsed { width: 44px; overflow: visible; }
+      .sidebar-header { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding-bottom: 12px; border-bottom: 1px solid rgba(20, 30, 92, 0.08); }
+      .sidebar-brand { display: flex; align-items: center; justify-content: center; min-height: 42px; }
+      .sidebar-brand img { display: block; max-width: 120px; height: auto; }
+      .nav { display: flex; flex-direction: column; gap: 4px; }
+      .nav-item-wrap {
+        position: relative; display: block;
+      }
+      .nav-item-wrap .nav-item { width: 100%; }
+      .news-events-dropdown {
+        position: absolute; left: calc(100% + 12px); top: -10px; min-width: 150px; background: var(--panel); border: 1px solid var(--border); border-radius: 10px; box-shadow: 0 14px 30px rgba(20, 30, 92, 0.14); padding: 6px; display: none; flex-direction: column; gap: 4px; z-index: 30;
+      }
+      .nav-item-wrap:hover .news-events-dropdown, .nav-item-wrap:focus-within .news-events-dropdown, .nav-item-wrap.news-events-wrap.open .news-events-dropdown { display: flex; }
+      .news-events-menu-link {
+        width: 100%; border: 0; border-radius: 8px; background: transparent; color: var(--secondary); font-size: 0.74rem; font-weight: 700; text-align: left; padding: 7px 9px; cursor: pointer; display: flex; align-items: center; gap: 8px;
+      }
+      .news-events-menu-link:hover, .news-events-menu-link.active { background: #eef1ff; color: var(--primary); }
+      .news-events-menu-icon { width: 16px; height: 16px; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; color: currentColor; }
+      .nav-item {
+        display: flex; align-items: center; justify-content: flex-start; gap: 12px; text-decoration: none;
+        color: #141E5C; background: transparent; border-radius: 10px; padding: 12px 12px; font-size: 0.78rem; font-weight: 600;
+        transition: background 0.2s ease; position: relative;
+      }
+      .nav-item:hover { background: rgba(20, 30, 92, 0.04); }
+      .nav-item.active { background: rgba(20, 30, 92, 0.06); }
+      .nav-icon { width: 18px; height: 18px; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; }
+      .nav-icon svg { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+      .sidebar.collapsed .sidebar-brand, .sidebar.collapsed .nav-label { display: none; }
+      .sidebar.collapsed .nav-item { padding: 12px 8px; justify-content: center; }
+      .sidebar.collapsed .nav-item::after {
+        content: attr(data-label); position: absolute; left: calc(100% + 12px); top: 50%; transform: translateY(-50%);
+        background: #ffffff; color: #141E5C; padding: 10px 16px; border-radius: 10px; border: 1px solid rgba(20, 30, 92, 0.12);
+        font-size: 12px; font-weight: 700; white-space: nowrap; opacity: 0; pointer-events: none; transition: opacity 0.15s ease;
+        box-shadow: 0 10px 22px rgba(20, 30, 92, 0.12); z-index: 50; min-width: 140px; width: max-content; text-align: center;
+      }
+      .sidebar.collapsed .nav-item:hover::after, .sidebar.collapsed .nav-item:focus-visible::after { opacity: 1; }
+
+      .main-area { flex: 1; display: flex; flex-direction: column; min-width: 0; height: 100vh; overflow: hidden; }
+      .topbar {
+        background: #fff; border-bottom: 1px solid var(--border); padding: 10px 24px; display: flex; justify-content: space-between; align-items: center;
+        gap: 16px; flex-shrink: 0; min-height: 52px; height: 52px;
+      }
+      .brand-wrap { display: flex; align-items: center; gap: 12px; }
+      .sidebar-toggle {
+        border: 1px solid rgba(20, 30, 92, 0.12); background: #f4f6ff; color: #141E5C; width: 36px; height: 36px; border-radius: 6px;
+        cursor: pointer; display: inline-flex; align-items: center; justify-content: center; padding: 0;
+      }
+      .sidebar-toggle svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+      .brand { font-weight: 800; letter-spacing: 0.04em; color: #141E5C; line-height: 1.2; font-size: 0.8rem; }
+      .userbar { display: flex; align-items: center; gap: 12px; }
+      .logout {
+        text-decoration: none; color: var(--text); background: #f4f6fb; border: 1px solid var(--border); border-radius: 10px;
+        padding: 9px 14px; font-size: 0.8rem; font-weight: 600;
+      }
+
+      .container { width: 100%; margin: 0; padding: 18px 24px 42px; overflow-y: auto; flex: 1; }
+      .page-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 0 0 14px; }
+      .tabs { display: flex; align-items: center; gap: 10px; margin: 0 0 16px; }
+      .tab-button { border: 1px solid rgba(20, 30, 92, 0.12); background: #ffffff; color: #141E5C; padding: 10px 18px; border-radius: 10px 10px 0 0; font-size: 0.78rem; font-weight: 700; cursor: pointer; transition: all 0.15s ease; }
+      .tab-button.active { background: #141E5C; color: #ffffff; border-color: #141E5C; }
+      .tab-panel { display: none; }
+      .tab-panel.active { display: block; }
+      .table-wrap {
+        width: 100%; background: var(--panel); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; box-shadow: 0 10px 24px rgba(20, 30, 66, 0.04);
+      }
+      table { width: 100%; border-collapse: collapse; }
+      th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--border); vertical-align: top; font-size: 0.82rem; }
+      th {
+        background: #f8f8ff; font-size: 0.66rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted);
+      }
+      .empty { padding: 26px 18px; color: var(--muted); font-weight: 600; }
+      .badge {
+        display: inline-flex; align-items: center; gap: 6px; padding: 5px 8px; border-radius: 999px; background: #eef0ff; color: #2d2d95; font-size: 0.72rem; font-weight: 700;
+      }
+      .order-cell {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        min-width: 72px;
+      }
+      .drag-handle {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 24px;
+        height: 24px;
+        border-radius: 6px;
+        background: #f4f6ff;
+        border: 1px solid rgba(20, 30, 92, 0.1);
+        color: #141E5C;
+        cursor: grab;
+        user-select: none;
+      }
+      .drag-handle:active {
+        cursor: grabbing;
+      }
+      .order-value {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 20px;
+        padding: 4px 6px;
+        border-radius: 999px;
+        background: #eef0ff;
+        color: #2d2d95;
+        font-size: 0.72rem;
+        font-weight: 700;
+      }
+      .dragging {
+        opacity: 0.55;
+      }
+      .drag-over {
+        outline: 1px dashed rgba(20, 30, 92, 0.35);
+        outline-offset: -2px;
+      }
+      h1 {
+        margin: 0; font-size: clamp(1.2rem, 1.6vw, 1.5rem); line-height: 1.2; font-weight: 800; letter-spacing: 0.02em; color: #141E5C;
+      }
+      .service-total {
+        display: inline-flex; align-items: center; justify-content: center; padding: 6px 10px; border-radius: 999px; background: #f4f6ff; color: #141E5C;
+        border: 1px solid rgba(20, 30, 92, 0.12); font-size: 0.74rem; font-weight: 700; white-space: nowrap;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="layout">
+      <aside class="sidebar" id="portalSidebar">
+        <div class="sidebar-header">
+          <div class="sidebar-brand">
+            <img src="/image/header_logo.svg" alt="Vinayak Hospital logo" />
+          </div>
+        </div>
+        <nav class="nav" aria-label="Sidebar navigation">
+          <a class="nav-item" href="/portal" data-label="Dashboard">
+            <span class="nav-icon">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V20h14V9.5"/><path d="M9 20v-7h6v7"/></svg>
+            </span>
+            <span class="nav-label">Dashboard</span>
+          </a>
+          <a class="nav-item" href="/portal/add-doctors" data-label="Add Doctor">
+            <span class="nav-icon">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 15V7a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v8"/><path d="M16 7h2a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2h-2"/><path d="M8 19a3 3 0 0 1-3-3v-1h6v1a3 3 0 0 1-3 3Z"/><path d="M12 5h6a2 2 0 0 1 2 2v7"/></svg>
+            </span>
+            <span class="nav-label">Add Doctor</span>
+          </a>
+          <a class="nav-item" href="/portal/add-departments" data-label="Add Department">
+            <span class="nav-icon">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19V5a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v14"/><path d="M8 9h8M8 13h8M8 17h5"/><path d="M4 19h16"/></svg>
+            </span>
+            <span class="nav-label">Add Department</span>
+          </a>
+          <a class="nav-item active" href="/portal/services" data-label="Our Services">
+            <span class="nav-icon">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v4"/><path d="M12 17v4"/><path d="M4.93 4.93l2.83 2.83"/><path d="M16.24 16.24l2.83 2.83"/><path d="M3 12h4"/><path d="M17 12h4"/><path d="M4.93 19.07l2.83-2.83"/><path d="M16.24 7.76l2.83-2.83"/><circle cx="12" cy="12" r="3"/></svg>
+            </span>
+            <span class="nav-label">Our Services</span>
+          </a>
+          <a class="nav-item" href="/portal/add-health-packages" data-label="Health Packages">
+            <span class="nav-icon">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-8-4.35-8-10a4 4 0 0 1 7-2.65A4 4 0 0 1 20 11c0 5.65-8 10-8 10Z"/><path d="M12 9v4M10 11h4"/></svg>
+            </span>
+            <span class="nav-label">Health Packages</span>
+          </a>
+          <a class="nav-item" href="/portal/add-bod" data-label="Add BOD">
+            <span class="nav-icon">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16 11c1.657 0 3-1.567 3-3.5S17.657 4 16 4s-3 1.567-3 3.5S14.343 11 16 11zM8 11c1.657 0 3-1.567 3-3.5S9.657 4 8 4 5 5.567 5 7.5 6.343 11 8 11zM4 20c0-2.5 3-4 7-4s7 1.5 7 4v1H4v-1z"/></svg>
+            </span>
+            <span class="nav-label">Add BOD</span>
+          </a>
+          <a class="nav-item" href="/portal/suggestion" data-label="Suggestion">
+            <span class="nav-icon">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v18"/><path d="M3 12h18"/><circle cx="12" cy="12" r="8"/></svg>
+            </span>
+            <span class="nav-label">Suggestion</span>
+          </a>
+          <div class="nav-item-wrap news-events-wrap">
+            <a class="nav-item" href="/portal/news-and-event" data-label="News &amp; Events">
+              <span class="nav-icon">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19V7a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v12"/><path d="M8 11h8M8 15h8M8 7h8"/><path d="M4 19h16"/></svg>
+              </span>
+              <span class="nav-label">News &amp; Events</span>
+            </a>
+            <div class="news-events-dropdown">
+              <button type="button" class="news-events-menu-link active" data-panel="add">
+                <span class="news-events-menu-icon">＋</span>
+                <span class="news-events-menu-label">Add Card</span>
+              </button>
+              <button type="button" class="news-events-menu-link" data-panel="image">
+                <span class="news-events-menu-icon">▣</span>
+                <span class="news-events-menu-label">Image Gallery</span>
+              </button>
+              <button type="button" class="news-events-menu-link" data-panel="video">
+                <span class="news-events-menu-icon">▶</span>
+                <span class="news-events-menu-label">Video Gallery</span>
+              </button>
+            </div>
+          </div>
+          <a class="nav-item note-button" href="/portal/add-notes" data-panel="notes" data-label="Add Notes">
+            <span class="nav-icon">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3h7l5 5v13a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Z"/><path d="M14 3v5h5"/><path d="M8 12h8M8 16h8"/></svg>
+            </span>
+            <span class="nav-label">Add Notes</span>
+          </a>
+          <a class="nav-item settings-button" href="/portal/settings" data-label="Settings">
+            <span class="nav-icon">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v3M12 18v3M4.93 4.93l2.12 2.12M16.95 16.95l2.12 2.12M3 12h3M18 12h3M4.93 19.07l2.12-2.12M16.95 7.05l2.12-2.12"/><circle cx="12" cy="12" r="4"/></svg>
+            </span>
+            <span class="nav-label">Settings</span>
+          </a>
+        </nav>
+      </aside>
+
+      <main class="main-area">
+        <header class="topbar">
+          <div class="brand-wrap">
+            <button class="sidebar-toggle" type="button" aria-label="Toggle sidebar" aria-expanded="true">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+            </button>
+            <div class="brand">VINAYAK HOSPITAL &amp; MATERNITY HOME PORTAL</div>
+          </div>
+          <div class="userbar">
+            <a class="logout" href="/portal/logout">Logout</a>
+          </div>
+        </header>
+
+        <div class="container">
+          <div class="page-header">
+            <h1>Our Services</h1>
+            <span class="service-total">Total Services: {{ service_count }}</span>
+          </div>
+
+          <div class="tabs" role="tablist" aria-label="Services pages">
+            <button type="button" class="tab-button active" data-panel="add" aria-selected="true">Add Service</button>
+            <button type="button" class="tab-button" data-panel="list" aria-selected="false">Service List</button>
+          </div>
+
+          <div class="tab-panel active" id="tab-add">
+            <div class="table-wrap" style="max-width: 760px;">
+              <form method="post" action="{{ url_for('portal_create_service') }}" style="padding: 18px; display: grid; gap: 16px;">
+                <div style="display: grid; gap: 6px;">
+                  <label for="service-name" style="font-size: 0.76rem; font-weight: 700; color: var(--secondary);">Service Name</label>
+                  <input id="service-name" name="name" type="text" placeholder="Enter service name" required style="width: 100%; border: 1px solid rgba(20, 30, 92, 0.12); border-radius: 10px; padding: 10px 12px; font: inherit; color: var(--text); background: #fff;" />
+                </div>
+                <div style="display: grid; gap: 6px;">
+                  <label for="service-description" style="font-size: 0.76rem; font-weight: 700; color: var(--secondary);">Description</label>
+                  <textarea id="service-description" name="description" rows="4" placeholder="Describe this service" style="width: 100%; border: 1px solid rgba(20, 30, 92, 0.12); border-radius: 10px; padding: 10px 12px; font: inherit; color: var(--text); background: #fff; resize: vertical; min-height: 110px;"></textarea>
+                </div>
+                <div style="display: flex; justify-content: flex-end; gap: 10px;">
+                  <button type="reset" class="secondary-btn" style="border: none; border-radius: 10px; padding: 10px 14px; font: inherit; font-weight: 700; cursor: pointer; background: #eef0ff; color: var(--secondary);">Clear</button>
+                  <button type="submit" class="primary-btn" style="border: none; border-radius: 10px; padding: 10px 14px; font: inherit; font-weight: 700; cursor: pointer; background: var(--secondary); color: #fff;">Save Service</button>
+                </div>
+              </form>
+            </div>
+          </div>
+
+          <div class="tab-panel" id="tab-list">
+            <div class="table-wrap">
+              {% if services %}
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Order</th>
+                      <th>Name</th>
+                      <th>Description</th>
+                    </tr>
+                  </thead>
+                  <tbody id="serviceTableBody">
+                    {% for service in services %}
+                      <tr draggable="true" data-service-id="{{ service.id }}">
+                        <td>
+                          <div class="order-cell">
+                            <span class="drag-handle" aria-label="Drag to reorder">↕</span>
+                            <span class="order-value">{{ loop.index }}</span>
+                          </div>
+                        </td>
+                        <td>{{ service.name }}</td>
+                        <td>{{ service.description or '—' }}</td>
+                      </tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
+              {% else %}
+                <div class="empty">No services found in the database.</div>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+
+    <script>
+      const tabButtons = document.querySelectorAll('.tab-button');
+      const tabPanels = document.querySelectorAll('.tab-panel');
+
+      tabButtons.forEach((button) => {
+        button.addEventListener('click', () => {
+          const panelName = button.dataset.panel;
+          tabButtons.forEach((item) => {
+            item.classList.toggle('active', item === button);
+            item.setAttribute('aria-selected', String(item === button));
+          });
+          tabPanels.forEach((panel) => {
+            panel.classList.toggle('active', panel.id === `tab-${panelName}`);
+          });
+        });
+      });
+
+      const sidebar = document.getElementById('portalSidebar');
+      const toggle = document.querySelector('.sidebar-toggle');
+      if (toggle && sidebar) {
+        toggle.addEventListener('click', () => {
+          const collapsed = sidebar.classList.toggle('collapsed');
+          toggle.setAttribute('aria-expanded', String(!collapsed));
+        });
+      }
+
+      const serviceTableBody = document.getElementById('serviceTableBody');
+      if (serviceTableBody) {
+        let draggedRow = null;
+
+        function syncServiceOrderNumbers() {
+          Array.from(serviceTableBody.children).forEach((row, index) => {
+            const orderValue = row.querySelector('.order-value');
+            if (orderValue) {
+              orderValue.textContent = index + 1;
+            }
+          });
+        }
+
+        Array.from(serviceTableBody.children).forEach((row) => {
+          row.addEventListener('dragstart', () => {
+            draggedRow = row;
+            row.classList.add('dragging');
+          });
+
+          row.addEventListener('dragover', (event) => {
+            event.preventDefault();
+            row.classList.add('drag-over');
+          });
+
+          row.addEventListener('dragleave', () => {
+            row.classList.remove('drag-over');
+          });
+
+          row.addEventListener('drop', async (event) => {
+            event.preventDefault();
+            row.classList.remove('drag-over');
+
+            if (!draggedRow || draggedRow === row) return;
+
+            const rows = Array.from(serviceTableBody.children);
+            const fromIndex = rows.indexOf(draggedRow);
+            const toIndex = rows.indexOf(row);
+
+            if (fromIndex < toIndex) {
+              serviceTableBody.insertBefore(draggedRow, row.nextSibling);
+            } else {
+              serviceTableBody.insertBefore(draggedRow, row);
+            }
+
+            syncServiceOrderNumbers();
+
+            const serviceIds = Array.from(serviceTableBody.children).map((item) => Number(item.dataset.serviceId)).filter(Boolean);
+            try {
+              const response = await fetch('/portal/services/reorder', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ service_ids: serviceIds }),
+                credentials: 'same-origin'
+              });
+              if (!response.ok) {
+                console.error('Failed to update service order');
+              }
+            } catch (error) {
+              console.error('Failed to update service order', error);
+            }
+          });
+
+          row.addEventListener('dragend', () => {
+            row.classList.remove('dragging', 'drag-over');
+            draggedRow = null;
+          });
+        });
+      }
+    </script>
+  </body>
+</html>

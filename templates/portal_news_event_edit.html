@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Edit News & Event</title>
+    <style>
+      :root {
+        --bg: #f5f4ff;
+        --panel: #ffffff;
+        --primary: #4d2adf;
+        --secondary: #141E5C;
+        --text: #1d2433;
+        --muted: #5e697d;
+        --border: #eae6f9;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0; font-family: Arial, Helvetica, sans-serif; color: var(--text);
+      }
+      .shell {
+        max-width: 900px; margin: 40px auto; padding: 24px; background: var(--panel); border: 1px solid var(--border); border-radius: 18px; box-shadow: 0 14px 40px rgba(20,30,92,0.08);
+      }
+      h1 {
+        margin: 0 0 20px; font-size: clamp(1.4rem, 2vw, 2rem); color: var(--secondary);
+      }
+      form {
+        display: grid; gap: 18px;
+      }
+      .grid {
+        display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 18px;
+      }
+      .field {
+        display: grid; gap: 8px;
+      }
+      label {
+        font-size: 0.8rem; font-weight: 700; color: var(--secondary);
+      }
+      input, textarea {
+        border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px; font: inherit; color: var(--text); background: #fff;
+      }
+      textarea {
+        min-height: 140px; resize: vertical;
+      }
+      .actions {
+        display: flex; justify-content: flex-end; gap: 12px; margin-top: 8px;
+      }
+      .btn {
+        appearance: none; border: none; cursor: pointer; border-radius: 10px; padding: 11px 18px; font-weight: 700; font-size: 0.8rem;
+      }
+      .btn-primary {
+        background: var(--secondary); color: #fff;
+      }
+      .btn-secondary {
+        background: #f4f6fb; color: var(--secondary); border: 1px solid var(--border);
+      }
+      .current-image {
+        width: 100%; max-width: 220px; min-height: 120px; object-fit: cover; border-radius: 10px; border: 1px solid var(--border);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="shell">
+      <h1>Edit News & Event</h1>
+      <form method="post" action="{{ url_for('portal_news_event_update', event_id=event.id) }}" enctype="multipart/form-data">
+        <div class="grid">
+          <div class="field">
+            <label for="title">Title</label>
+            <input id="title" name="title" type="text" value="{{ event.title or '' }}" required />
+          </div>
+          <div class="field">
+            <label for="event_type">Type</label>
+            <input id="event_type" name="event_type" type="text" value="{{ event.event_type or '' }}" />
+          </div>
+        </div>
+
+        <div class="grid">
+          <div class="field">
+            <label for="event_date">Date (AD input)</label>
+            <input id="event_date" name="event_date" type="date" value="{{ event.event_date or '' }}" />
+          </div>
+          <div class="field">
+            <label for="location">Location</label>
+            <input id="location" name="location" type="text" value="{{ event.location or '' }}" />
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="description">Description</label>
+          <textarea id="description" name="description">{{ event.description or '' }}</textarea>
+        </div>
+
+        <div class="grid">
+          <div class="field">
+            <label for="image">Image</label>
+            <input id="image" name="image" type="file" accept=".jpg,.jpeg,.png,.webp" />
+          </div>
+        </div>
+
+        {% if event.image_url %}
+        <div class="field">
+          <label>Current image</label>
+          <img class="current-image" src="{{ event.image_url }}" alt="Current event image" />
+        </div>
+        {% endif %}
+
+        <div class="actions">
+          <a class="btn btn-secondary" href="{{ url_for('portal_news_events') }}">Cancel</a>
+          <button class="btn btn-primary" type="submit">Save changes</button>
+        </div>
+      </form>
+    </div>
+  </body>
+</html>

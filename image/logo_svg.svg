@@ -1,0 +1,28 @@
+<svg version="1.2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 726 300" width="726" height="300">
+	<style>
+		tspan { white-space:pre } 
+		.s0 { fill: #141e5c } 
+		.t1 { font-size: 24px;fill: #141e5c;font-weight: 400;font-family: "NotoSerifGeorgian-Bold", "Noto Serif Georgian" } 
+		.t2 { font-size: 24px;fill: #dd1d15;font-weight: 400;font-family: "NotoSerifGeorgian-Bold", "Noto Serif Georgian" } 
+		.s3 { fill: #ffffff } 
+	</style>
+	<path id="Layer 2" class="s0" d="m300 94v112h-300v-112zm-93.58 205.71l-112 0.07-0.2-300 112-0.07z"/>
+	<text id="VINAYAK" style="transform: matrix(3.732,.004,0,3.372,306.048,117.963)">
+		<tspan x="0" y="0" class="t1">V</tspan><tspan  y="0" class="t1">I</tspan><tspan  y="0" class="t1">N</tspan><tspan  y="0" class="t1">A</tspan><tspan  y="0" class="t1">Y</tspan><tspan  y="0" class="t1">A</tspan><tspan  y="0" class="t1">K
+</tspan>
+	</text>
+	<text id="HOSPITAL" style="transform: matrix(3.054,0,0,2.882,326.388,191.91)">
+		<tspan x="0" y="0" class="t2">H</tspan><tspan  y="0" class="t2">O</tspan><tspan  y="0" class="t2">S</tspan><tspan  y="0" class="t2">P</tspan><tspan  y="0" class="t2">I</tspan><tspan  y="0" class="t2">T</tspan><tspan  y="0" class="t2">A</tspan><tspan  y="0" class="t2">L
+</tspan>
+	</text>
+	<text id="&amp; MATERNITY HOME" style="transform: matrix(1.629,0,0,1.629,307.706,242.435)">
+		<tspan x="0" y="0" class="t1">&amp;</tspan><tspan  y="0" class="t1"> </tspan><tspan  y="0" class="t1">M</tspan><tspan  y="0" class="t1">A</tspan><tspan  y="0" class="t1">T</tspan><tspan  y="0" class="t1">E</tspan><tspan  y="0" class="t1">R</tspan><tspan  y="0" class="t1">N</tspan><tspan  y="0" class="t1">I</tspan><tspan  y="0" class="t1">T</tspan><tspan  y="0" class="t1">Y</tspan><tspan  y="0" class="t1"> </tspan><tspan  y="0" class="t1">H</tspan><tspan  y="0" class="t1">O</tspan><tspan  y="0" class="t1">M</tspan><tspan  y="0" class="t1">E</tspan><tspan  y="0" class="t1">
+</tspan>
+	</text>
+	<path id="Shape 4" class="s3" d="m151 74c0 0 4.2-5.94 7-7 2.8-1.06 6.05-0.91 8 1 1.95 1.91 2.41 4.26 2 6-0.41 1.74-6 9-6 9z"/>
+	<path id="Shape 5" class="s3" d="m106 150v12.04c0 0-9.15 8.2-10 9.96-0.85 1.76-0.58 4.69 4 5 4.58 0.31 37 0 37 0 0 0 0.95 2.29 4 2 3.05-0.29 4-5 4-5 0 0-0.27-1.59 1-3 1.27-1.41 2.34-4.17 1-7-1.34-2.83-4.22-6.89-5-7-0.78-0.11-5.98-2.02-9 4l-2 3h-18v-14z"/>
+	<path id="Shape 1" fill-rule="evenodd" class="s3" d="m110 154c-8.3 0-15-6.71-15-15 0-8.29 6.7-15 15-15 8.3 0 15 6.71 15 15 0 8.29-6.7 15-15 15z"/>
+	<path id="Layer 3" fill-rule="evenodd" class="s3" d="m144 121c-13.27 0-24-10.73-24-24 0-13.27 10.73-24 24-24 13.27 0 24 10.73 24 24 0 13.27-10.73 24-24 24z"/>
+	<path id="Shape 3" class="s3" d="m99.33 155.83"/>
+	<path id="Layer 1" class="s3" d="m107 194c0 0-3.14-2.96-1-5 2.14-2.04 5 1 5 1 0.66 0.54 13.27 6.89 28 3 14.73-3.89 27.07-15.65 33-25 5.93-9.35 12.93-25.37 9-48 0 0-1.04-1.83 1-4 2.04-2.17 9.5-6.74 13-5 3.5 1.74 11.3 4.5 12 20 0.7 15.5-4.93 28.14-10 36v73h-55.01v-38c0 0-11.24 2.42-19.99 0-8.75-2.42-15-8-15-8z"/>
+</svg>

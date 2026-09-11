@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/png" href="/image/fav-icon.png" />
+    <title>Settings - Vinayak Portal</title>
+    <style>
+      :root {
+        --bg: #f5f4ff;
+        --panel: #ffffff;
+        --primary: #4d2adf;
+        --primary-soft: #eef0ff;
+        --secondary: #141E5C;
+        --secondary-dark: #0f173f;
+        --text: #1d2433;
+        --muted: #5e697d;
+        --border: #eae6f9;
+        --green: #178a59;
+      }
+
+      * { box-sizing: border-box; }
+      html, body { height: 100%; }
+      body {
+        margin: 0;
+        font-family: Arial, Helvetica, sans-serif;
+        font-size: 0.82rem;
+        color: var(--text);
+        background: var(--bg);
+        overflow: hidden;
+      }
+
+      .layout { display: flex; min-height: 100vh; height: 100vh; }
+
+      .sidebar {
+        width: 250px;
+        background: #F8FAFC;
+        color: #141E5C;
+        padding: 18px 14px;
+        display: flex;
+        flex-direction: column;
+        gap: 18px;
+        transition: width 0.25s ease;
+        overflow: visible;
+        border-right: 1px solid rgba(20, 30, 92, 0.08);
+        position: sticky;
+        top: 0;
+        height: 100vh;
+        flex-shrink: 0;
+        z-index: 1;
+      }
+
+      .sidebar.collapsed {
+        width: 44px;
+        overflow: visible;
+      }
+
+      .sidebar-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        padding-bottom: 12px;
+        border-bottom: 1px solid rgba(20, 30, 92, 0.08);
+      }
+
+      .sidebar-brand {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 42px;
+      }
+
+      .sidebar-brand img {
+        display: block;
+        max-width: 120px;
+        height: auto;
+      }
+
+      .nav {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+
+      .nav-item-wrap {
+        position: relative;
+        display: block;
+      }
+
+      .nav-item-wrap .nav-item {
+        width: 100%;
+      }
+
+      .news-events-dropdown {
+        position: absolute;
+        left: calc(100% + 12px);
+        top: -10px;
+        min-width: 150px;
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        box-shadow: 0 14px 30px rgba(20, 30, 92, 0.14);
+        padding: 6px;
+        display: none;
+        flex-direction: column;
+        gap: 4px;
+        z-index: 30;
+      }
+
+      .nav-item-wrap:hover .news-events-dropdown,
+      .nav-item-wrap:focus-within .news-events-dropdown,
+      .nav-item-wrap.news-events-wrap.open .news-events-dropdown {
+        display: flex;
+      }
+
+      .news-events-menu-link {
+        width: 100%; border: 0; border-radius: 8px; background: transparent;
+        color: var(--secondary); font-size: 0.74rem; font-weight: 700;
+        text-align: left; padding: 7px 9px; cursor: pointer; display: flex;
+        align-items: center; gap: 8px;
+      }
+
+      .news-events-menu-link:hover, .news-events-menu-link.active { background: #eef1ff; color: var(--primary); }
+      .news-events-menu-icon { width: 16px; height: 16px; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; color: currentColor; }
+
+      .nav-item {
+        display: flex;
+        align-items: center;
+        justify-content: flex-start;
+        gap: 12px;
+        text-decoration: none;
+        color: #141E5C;
+        background: transparent;
+        border: none;
+        border-radius: 10px;
+        padding: 12px 12px;
+        font-size: 0.78rem;
+        font-weight: 600;
+        transition: padding 0.25s ease, background 0.2s ease;
+        text-align: left;
+        position: relative;
+      }
+
+      .nav-item:hover { background: rgba(20, 30, 92, 0.04); }
+      .nav-item.active { background: rgba(20, 30, 92, 0.06); }
+
+      .nav-icon {
+        width: 18px;
+        height: 18px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+      }
+
+      .nav-icon svg {
+        width: 18px;
+        height: 18px;
+        stroke: currentColor;
+        fill: none;
+        stroke-width: 2;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+
+      .sidebar.collapsed .sidebar-brand,
+      .sidebar.collapsed .nav-label {
+        display: none;
+      }
+
+      .sidebar.collapsed .nav-item {
+        padding: 12px 8px;
+        justify-content: center;
+      }
+
+      .sidebar.collapsed .nav-item::after {
+        content: attr(data-label);
+        position: absolute;
+        left: calc(100% + 12px);
+        top: 50%;
+        transform: translateY(-50%);
+        background: #ffffff;
+        color: #141E5C;
+        padding: 10px 16px;
+        border-radius: 10px;
+        border: 1px solid rgba(20, 30, 92, 0.12);
+        font-size: 12px;
+        font-weight: 700;
+        white-space: nowrap;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.15s ease;
+        box-shadow: 0 10px 22px rgba(20, 30, 92, 0.12);
+        z-index: 50;
+        min-width: 140px;
+        width: max-content;
+        text-align: center;
+      }
+
+      .sidebar.collapsed .nav-item:hover::after,
+      .sidebar.collapsed .nav-item:focus-visible::after {
+        opacity: 1;
+      }
+
+      .main-area {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        min-width: 0;
+        height: 100vh;
+        overflow: hidden;
+      }
+
+      .topbar {
+        background: #fff;
+        border-bottom: 1px solid var(--border);
+        padding: 10px 24px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 16px;
+        flex-shrink: 0;
+        min-height: 52px;
+        height: 52px;
+      }
+
+      .brand-wrap {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+
+      .sidebar-toggle {
+        border: 1px solid rgba(20, 30, 92, 0.12);
+        background: #f4f6ff;
+        color: #141E5C;
+        width: 36px;
+        height: 36px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 1rem;
+        flex-shrink: 0;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0;
+      }
+
+      .sidebar-toggle svg {
+        width: 16px;
+        height: 16px;
+        stroke: currentColor;
+        fill: none;
+        stroke-width: 2;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+
+      .brand {
+        font-weight: 800;
+        letter-spacing: 0.04em;
+        color: #141E5C;
+        font-size: 0.8rem;
+        line-height: 1.2;
+      }
+
+      .userbar {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+
+      .logout {
+        text-decoration: none;
+        color: var(--text);
+        background: #f4f6fb;
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 9px 14px;
+        font-size: 0.8rem;
+        font-weight: 600;
+      }
+
+      .container {
+        width: 100%;
+        max-width: none;
+        margin: 0;
+        padding: 18px 24px 42px;
+        overflow-y: auto;
+        flex: 1;
+      }
+
+      .page-header { margin-bottom: 20px; }
+
+      h1 {
+        margin: 0;
+        font-size: clamp(1.2rem, 1.6vw, 1.5rem);
+        line-height: 1.2;
+        font-weight: 800;
+        letter-spacing: 0.02em;
+        color: #141E5C;
+      }
+
+      .panel {
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        box-shadow: 0 10px 24px rgba(20, 30, 66, 0.04);
+        padding: 22px;
+        max-width: 760px;
+      }
+
+      .settings-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 20px;
+      }
+
+      .settings-section {
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        box-shadow: 0 10px 24px rgba(20, 30, 66, 0.04);
+        padding: 22px;
+      }
+
+      .settings-section h2 {
+        margin: 0 0 18px;
+        font-size: 1rem;
+        color: var(--secondary);
+      }
+
+      .settings-form {
+        display: grid;
+        gap: 18px;
+      }
+
+      .field {
+        display: grid;
+        gap: 8px;
+      }
+
+      .field label {
+        font-weight: 700;
+        color: var(--secondary);
+      }
+
+      .field input,
+      .field textarea {
+        width: 100%;
+        padding: 11px 12px;
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        background: #fff;
+        color: var(--text);
+        font-size: 0.78rem;
+      }
+
+      .field input:focus,
+      .field textarea:focus {
+        outline: 2px solid rgba(77, 42, 223, 0.15);
+        border-color: rgba(77, 42, 223, 0.3);
+      }
+
+      .submit-btn {
+        border: 0;
+        border-radius: 10px;
+        background: var(--primary);
+        color: #fff;
+        padding: 11px 18px;
+        cursor: pointer;
+        font-weight: 700;
+        width: fit-content;
+      }
+
+      .helper-text {
+        font-size: 0.72rem;
+        color: var(--muted);
+        margin-top: -8px;
+      }
+
+      .muted { color: var(--muted); }
+    </style>
+  </head>
+  <body>
+    <div class="layout">
+      <aside class="sidebar" id="portalSidebar">
+        <div class="sidebar-header">
+          <div class="sidebar-brand">
+            <img src="/image/header_logo.svg" alt="Vinayak Hospital logo" />
+          </div>
+        </div>
+        <nav class="nav" aria-label="Sidebar navigation">
+          <a class="nav-item" href="/portal" data-label="Dashboard">
+            <span class="nav-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V20h14V9.5"/><path d="M9 20v-7h6v7"/></svg></span>
+            <span class="nav-label">Dashboard</span>
+          </a>
+          <a class="nav-item" href="/portal/add-doctors" data-label="Add Doctor">
+            <span class="nav-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 15V7a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v8"/><path d="M16 7h2a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2h-2"/><path d="M8 19a3 3 0 0 1-3-3v-1h6v1a3 3 0 0 1-3 3Z"/><path d="M12 5h6a2 2 0 0 1 2 2v7"/></svg></span>
+            <span class="nav-label">Add Doctor</span>
+          </a>
+          <a class="nav-item" href="/portal/add-departments" data-label="Add Department">
+            <span class="nav-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19V5a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v14"/><path d="M8 9h8M8 13h8M8 17h5"/><path d="M4 19h16"/></svg></span>
+            <span class="nav-label">Add Department</span>
+          </a>
+          <a class="nav-item" href="/portal/services" data-label="Our Services">
+            <span class="nav-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v4"/><path d="M12 17v4"/><path d="M4.93 4.93l2.83 2.83"/><path d="M16.24 16.24l2.83 2.83"/><path d="M3 12h4"/><path d="M17 12h4"/><path d="M4.93 19.07l2.83-2.83"/><path d="M16.24 7.76l2.83-2.83"/><circle cx="12" cy="12" r="3"/></svg></span>
+            <span class="nav-label">Our Services</span>
+          </a>
+          <a class="nav-item" href="/portal/add-health-packages" data-label="Health Packages">
+            <span class="nav-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-8-4.35-8-10a4 4 0 0 1 7-2.65A4 4 0 0 1 20 11c0 5.65-8 10-8 10Z"/><path d="M12 9v4M10 11h4"/></svg></span>
+            <span class="nav-label">Health Packages</span>
+          </a>
+          <a class="nav-item" href="/portal/add-bod" data-label="Add BOD">
+            <span class="nav-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16 11c1.657 0 3-1.567 3-3.5S17.657 4 16 4s-3 1.567-3 3.5S14.343 11 16 11zM8 11c1.657 0 3-1.567 3-3.5S9.657 4 8 4 5 5.567 5 7.5 6.343 11 8 11zM4 20c0-2.5 3-4 7-4s7 1.5 7 4v1H4v-1z"/></svg></span>
+            <span class="nav-label">Add BOD</span>
+          </a>
+          <a class="nav-item" href="/portal/suggestion" data-label="Suggestion">
+            <span class="nav-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v18"/><path d="M3 12h18"/><circle cx="12" cy="12" r="8"/></svg></span>
+            <span class="nav-label">Suggestion</span>
+          </a>
+          <div class="nav-item-wrap news-events-wrap">
+            <a class="nav-item" href="/portal/news-and-event" data-label="News & Events">
+              <span class="nav-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19V7a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v12"/><path d="M8 11h8M8 15h8M8 7h8"/><path d="M4 19h16"/></svg></span>
+              <span class="nav-label">News &amp; Events</span>
+            </a>
+            <div class="news-events-dropdown">
+              <button type="button" class="news-events-menu-link active" data-panel="add">
+                <span class="news-events-menu-icon">＋</span>
+                <span class="news-events-menu-label">Add Card</span>
+              </button>
+              <button type="button" class="news-events-menu-link" data-panel="image">
+                <span class="news-events-menu-icon">▣</span>
+                <span class="news-events-menu-label">Image Gallery</span>
+              </button>
+              <button type="button" class="news-events-menu-link" data-panel="video">
+                <span class="news-events-menu-icon">▶</span>
+                <span class="news-events-menu-label">Video Gallery</span>
+              </button>
+            </div>
+          </div>
+          <a class="nav-item note-button" href="/portal/add-notes" data-panel="notes" data-label="Add Notes">
+            <span class="nav-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3h7l5 5v13a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Z"/><path d="M14 3v5h5"/><path d="M8 12h8M8 16h8"/></svg></span>
+            <span class="nav-label">Add Notes</span>
+          </a>
+          <a class="nav-item active" href="/portal/settings" data-label="Settings">
+            <span class="nav-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v3M12 18v3M4.93 4.93l2.12 2.12M16.95 16.95l2.12 2.12M3 12h3M18 12h3M4.93 19.07l2.12-2.12M16.95 7.05l2.12-2.12"/><circle cx="12" cy="12" r="4"/></svg></span>
+            <span class="nav-label">Settings</span>
+          </a>
+        </nav>
+      </aside>
+
+      <main class="main-area">
+        <header class="topbar">
+          <div class="brand-wrap">
+            <button class="sidebar-toggle" type="button" aria-label="Toggle sidebar" aria-expanded="true">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg>
+            </button>
+            <div class="brand">VINAYAK HOSPITAL &amp; MATERNITY HOME PORTAL</div>
+          </div>
+          <div class="userbar">
+            <a class="logout" href="/portal/logout">Logout</a>
+          </div>
+        </header>
+
+        <div class="container">
+          <div class="page-header">
+            <h1>Settings</h1>
+          </div>
+
+          <div class="settings-grid">
+            <div class="settings-section">
+              <h2>Hospital Contact Details</h2>
+              <form method="post" action="/portal/settings" class="settings-form">
+                <input type="hidden" name="settings_form_type" value="contact" />
+
+                <div class="field">
+                  <label for="phone">Phone Number</label>
+                  <input id="phone" name="phone" type="text" value="{{ settings.phone or '' }}" placeholder="Enter phone number" />
+                </div>
+
+                <div class="field">
+                  <label for="email">Email</label>
+                  <input id="email" name="email" type="email" value="{{ settings.email or '' }}" placeholder="Enter email address" />
+                </div>
+
+                <div class="field">
+                  <label for="location">Location</label>
+                  <input id="location" name="location" type="text" value="{{ settings.location or '' }}" placeholder="Enter hospital location" />
+                </div>
+
+                <button type="submit" class="submit-btn">Save Contact Info</button>
+              </form>
+            </div>
+
+            <div class="settings-section">
+              <h2>Update Admin Username &amp; Password</h2>
+              <form id="adminAccountForm" method="post" action="/portal/settings" class="settings-form">
+                <input type="hidden" name="settings_form_type" value="account" />
+
+                <div class="field">
+                  <label for="current_username">Current Username</label>
+                  <input id="current_username" name="current_username" type="text" value="{{ current_username or username }}" readonly />
+                </div>
+
+                <div class="field">
+                  <label for="new_username">New Username</label>
+                  <input id="new_username" name="new_username" type="text" value="{{ current_username or username }}" placeholder="Enter new username" />
+                </div>
+
+                <div class="field">
+                  <label for="current_password">Current Password</label>
+                  <input id="current_password" name="current_password" type="password" placeholder="Enter current password" />
+                </div>
+
+                <div class="field">
+                  <label for="new_password">New Password</label>
+                  <input id="new_password" name="new_password" type="password" placeholder="Enter new password" />
+                </div>
+
+                <div class="field">
+                  <label for="confirm_password">Confirm New Password</label>
+                  <input id="confirm_password" name="confirm_password" type="password" placeholder="Confirm new password" />
+                </div>
+
+                <div class="helper-text">Leave the password fields blank if you only want to change the username.</div>
+
+                <button type="submit" class="submit-btn">Update Admin Account</button>
+              </form>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+      const sidebar = document.getElementById('portalSidebar');
+      const toggleButton = document.querySelector('.sidebar-toggle');
+
+      function setToggleIcon(isCollapsed) {
+        if (!toggleButton) return;
+
+        const iconMarkup = isCollapsed
+          ? '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>'
+          : '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg>';
+
+        toggleButton.innerHTML = iconMarkup;
+        toggleButton.setAttribute('aria-expanded', String(!isCollapsed));
+      }
+
+      if (sidebar && toggleButton) {
+        setToggleIcon(false);
+
+        toggleButton.addEventListener('click', () => {
+          const isCollapsed = sidebar.classList.toggle('collapsed');
+          setToggleIcon(isCollapsed);
+        });
+      }
+
+      const urlParams = new URLSearchParams(window.location.search);
+      const accountUpdated = urlParams.get('account_updated') === '1' || urlParams.get('password_updated') === '1';
+      if (accountUpdated) {
+        Swal.fire({
+          title: 'Admin Account Updated',
+          text: 'Your admin username and/or password has been updated successfully.',
+          icon: 'success',
+          confirmButtonColor: '#4d2adf',
+          timer: 2500,
+          timerProgressBar: true,
+        });
+      }
+
+      const adminAccountForm = document.getElementById('adminAccountForm');
+      if (adminAccountForm) {
+        adminAccountForm.addEventListener('submit', (event) => {
+          const newUsername = (document.getElementById('new_username')?.value || '').trim();
+          if (!newUsername) {
+            return;
+          }
+
+          event.preventDefault();
+          Swal.fire({
+            title: 'Updating Admin Account',
+            text: 'Your changes are being saved.',
+            icon: 'info',
+            showConfirmButton: false,
+            allowOutsideClick: false,
+            timer: 800,
+            timerProgressBar: true,
+          }).then(() => {
+            adminAccountForm.submit();
+          });
+        });
+      }
+    </script>
+  </body>
+</html>

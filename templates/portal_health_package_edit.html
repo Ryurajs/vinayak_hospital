@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Edit Health Package</title>
+    <style>
+      :root {
+        --bg: #f5f4ff;
+        --panel: #ffffff;
+        --primary: #4d2adf;
+        --secondary: #141E5C;
+        --text: #1d2433;
+        --muted: #5e697d;
+        --border: #eae6f9;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0; font-family: Arial, Helvetica, sans-serif; color: var(--text);
+      }
+      .shell {
+        max-width: 900px; margin: 40px auto; padding: 24px; background: var(--panel); border: 1px solid var(--border); border-radius: 18px; box-shadow: 0 14px 40px rgba(20,30,92,0.08);
+      }
+      h1 {
+        margin: 0 0 20px; font-size: clamp(1.4rem, 2vw, 2rem); color: var(--secondary);
+      }
+      form {
+        display: grid; gap: 18px;
+      }
+      .grid {
+        display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 18px;
+      }
+      .field {
+        display: grid; gap: 8px;
+      }
+      label {
+        font-size: 0.8rem; font-weight: 700; color: var(--secondary);
+      }
+      input, textarea {
+        border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px; font: inherit; color: var(--text); background: #fff;
+      }
+      textarea {
+        min-height: 160px; resize: vertical;
+      }
+      .tests-list {
+        display: grid; gap: 10px; margin: 0; padding: 0; list-style: none;
+      }
+      .test-item {
+        display: flex; align-items: center; gap: 10px;
+      }
+      .test-sn {
+        display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; border-radius: 999px; background: #eef0ff; color: var(--secondary); font-size: 0.72rem; font-weight: 700; flex-shrink: 0;
+      }
+      .test-item input {
+        flex: 1;
+      }
+      .remove-test {
+        border: 1px solid rgba(20, 30, 92, 0.12); background: #fff; color: var(--secondary); border-radius: 8px; width: 32px; height: 32px; cursor: pointer; font-weight: 700;
+      }
+      .add-test {
+        margin-top: 4px; align-self: flex-start; background: #f4f6fb; color: var(--secondary); border: 1px solid var(--border); border-radius: 8px; padding: 8px 12px; cursor: pointer; font-size: 0.75rem; font-weight: 700;
+      }
+      .actions {
+        display: flex; justify-content: flex-end; gap: 12px; margin-top: 8px;
+      }
+      .btn {
+        appearance: none; border: none; cursor: pointer; border-radius: 10px; padding: 11px 18px; font-weight: 700; font-size: 0.8rem;
+      }
+      .btn-primary {
+        background: var(--secondary); color: #fff;
+      }
+      .btn-secondary {
+        background: #f4f6fb; color: var(--secondary); border: 1px solid var(--border);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="shell">
+      <h1>Edit Health Package</h1>
+      <form method="post" action="{{ url_for('portal_update_health_package', package_id=package.id) }}">
+        <div class="grid">
+          <div class="field">
+            <label for="name">Name</label>
+            <input id="name" name="name" type="text" value="{{ package.name }}" required />
+          </div>
+          <div class="field">
+            <label for="price">Price</label>
+            <input id="price" name="price" type="text" value="{{ package.price }}" required />
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="description">Description</label>
+          <textarea id="description" name="description">{{ package.description or '' }}</textarea>
+        </div>
+
+        <div class="field">
+          <label>Tests</label>
+          <ul class="tests-list" id="testsList">
+            {% if package.tests %}
+              {% for test in package.tests %}
+                <li class="test-item">
+                  <span class="test-sn">{{ loop.index }}</span>
+                  <input type="text" name="tests" value="{{ test }}" />
+                  <button type="button" class="remove-test" aria-label="Remove test">−</button>
+                </li>
+              {% endfor %}
+            {% else %}
+              <li class="test-item">
+                <span class="test-sn">1</span>
+                <input type="text" name="tests" value="" placeholder="Add a test" />
+                <button type="button" class="remove-test" aria-label="Remove test">−</button>
+              </li>
+            {% endif %}
+          </ul>
+          <button type="button" class="add-test" id="addTestBtn">+ Add test</button>
+        </div>
+
+        <div class="actions">
+          <a class="btn btn-secondary" href="{{ url_for('portal_add_health_packages') }}">Cancel</a>
+          <button class="btn btn-primary" type="submit">Save changes</button>
+        </div>
+      </form>
+    </div>
+
+    <script>
+      const testsList = document.getElementById('testsList');
+      const addTestBtn = document.getElementById('addTestBtn');
+
+      function updateTestSerialNumbers() {
+        const items = testsList.querySelectorAll('.test-item');
+        items.forEach((item, index) => {
+          const sn = item.querySelector('.test-sn');
+          if (sn) {
+            sn.textContent = index + 1;
+          }
+        });
+      }
+
+      function addTestItem(value = '') {
+        const li = document.createElement('li');
+        li.className = 'test-item';
+        li.innerHTML = `
+          <span class="test-sn">${testsList.querySelectorAll('.test-item').length + 1}</span>
+          <input type="text" name="tests" value="${value.replace(/"/g, '&quot;')}" placeholder="Add a test" />
+          <button type="button" class="remove-test" aria-label="Remove test">−</button>
+        `;
+        li.querySelector('.remove-test').addEventListener('click', () => {
+          if (testsList.querySelectorAll('.test-item').length > 1) {
+            li.remove();
+            updateTestSerialNumbers();
+          }
+        });
+        testsList.appendChild(li);
+      }
+
+      addTestBtn.addEventListener('click', () => addTestItem(''));
+
+      testsList.querySelectorAll('.remove-test').forEach((button) => {
+        button.addEventListener('click', () => {
+          const items = testsList.querySelectorAll('.test-item');
+          if (items.length > 1) {
+            button.closest('.test-item').remove();
+            updateTestSerialNumbers();
+          }
+        });
+      });
+    </script>
+  </body>
+</html>
