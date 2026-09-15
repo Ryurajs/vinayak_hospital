@@ -2260,20 +2260,43 @@ body.local-origin .topbar {
 
   /* Controls for doctors search/filter */
   .doctor-controls {
-    max-width: 920px;
+    max-width: 980px;
     margin: 0 auto;
     display: flex;
-    gap: 0.75rem;
     align-items: center;
     justify-content: center;
-    flex-wrap: wrap;
     padding: 0 1rem;
   }
 
+  .doctor-filter-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    width: 100%;
+    max-width: 980px;
+    margin: 0 auto;
+  }
+
+  .doctor-filter-button-group {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+
+  .doctor-filter-input-row {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex: 1 1 auto;
+    justify-content: flex-end;
+  }
+
   .doctor-search {
-    flex: 1 1 360px;
+    flex: 1 1 300px;
     min-width: 220px;
-    max-width: 760px;
+    max-width: 560px;
     padding: 0.75rem 1rem;
     border-radius: 12px;
     border: 1px solid rgba(20,30,92,0.12);
@@ -2301,17 +2324,6 @@ body.local-origin .topbar {
     box-shadow: none;
     border-color: rgba(20,30,92,0.12);
   }
-
-/* Doctors filter row: quick filter buttons + department dropdown */
-.doctor-filter-row {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  justify-content: space-between;
-  width: 100%;
-  max-width: 980px;
-  margin: 0 auto;
-}
 
 .doctor-filter-btn {
   padding: 0.45rem 0.75rem;
@@ -2350,11 +2362,44 @@ body.local-origin .topbar {
     }
   }
 
+  @media (max-width: 768px) {
+    .doctor-filter-row {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 0.75rem;
+    }
+
+    .doctor-filter-button-group,
+    .doctor-filter-input-row {
+      width: 100%;
+      justify-content: stretch;
+    }
+
+    .doctor-filter-input-row {
+      flex-direction: row;
+    }
+
+    .department-dropdown,
+    .doctor-search {
+      flex: 1 1 0;
+      min-width: 0;
+      max-width: none;
+      width: 100%;
+    }
+  }
+
   @media (max-width: 560px) {
     .doctor-grid {
       grid-template-columns: 1fr;
     }
-    .doctor-search { min-width: 100%; }
+
+    .doctor-filter-input-row {
+      flex-direction: column;
+    }
+
+    .doctor-search {
+      min-width: 100%;
+    }
   }
 
   @media (max-width: 760px) {
@@ -2364,20 +2409,8 @@ body.local-origin .topbar {
       display: none !important;
     }
 
-    .doctor-filter-row {
-      justify-content: center;
-      gap: 0.5rem;
-    }
-
     .doctor-filter-btn {
       display: none;
-    }
-
-    .department-dropdown {
-      flex: 1 1 100%;
-      width: 100%;
-      max-width: 100%;
-      min-width: 0;
     }
   }
 
@@ -3309,7 +3342,7 @@ body.about-nav-black .topbar:not(.scrolled) .nav-item > a::after {
 
 .mega-menu {
   position: fixed;
-  top: 100px;
+  top: 70px;
   left: 50%;
   z-index: 100;
   transform: translateX(-50%);

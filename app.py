@@ -390,8 +390,8 @@ BOARD_MEMBERS = [
     },
     {
         'id': 3,
-        'name': 'Krishna Prasad Lamichhane (KP)',
-        'role': 'Manager Director (MD)',
+        'name': 'K.P. Lamichhane',
+        'role': 'Executive Chairman',
         'description': 'Steering hospital leadership, operational excellence, and strategic care delivery.',
         'image': '/image/bod1.png',
     },

@@ -3,6 +3,28 @@ import drDemoImage from '../../image/dr_demo.png';
 
 const fallbackDoctorImage = drDemoImage;
 
+const formatDoctorName = (name) => {
+  const raw = (name || '').toString().trim();
+  if (!raw) return '';
+
+  const normalized = raw.replace(/\s+/g, ' ').trim();
+
+  if (/^prof\.?\s*dr\.?\s+/i.test(normalized)) {
+    return normalized.replace(/^prof\.?\s*/i, 'Prof. ').replace(/\s+/g, ' ').trim();
+  }
+
+  if (/^dr\.?\s+/i.test(normalized)) {
+    return normalized.replace(/^dr\.?\s+/i, 'Dr. ');
+  }
+
+  if (/^yam\s+psd\.?\s+dwa$/i.test(normalized)) {
+    return 'Prof. Dr. Yam PSD. Dwa';
+  }
+
+  const withoutPrefix = normalized.replace(/^dr\.?\s+/i, '');
+  return `Dr. ${withoutPrefix.replace(/\b\w/g, (char) => char.toUpperCase())}`;
+};
+
 function DoctorProfile({ doctor, language = 'en', onBack }) {
   const [offsetTop, setOffsetTop] = useState(0);
   const isEnglish = language === 'en';
@@ -39,7 +61,7 @@ function DoctorProfile({ doctor, language = 'en', onBack }) {
             />
           </div>
           <div className="doctor-profile-info">
-            <h1>{doctor.name}</h1>
+            <h1>{formatDoctorName(doctor.name)}</h1>
             <p className="doctor-profile-specialty">{doctor.specialty || doctor.department}</p>
             <p className="doctor-profile-experience">{doctor.experience}</p>
             {doctor.bio && <div className="doctor-profile-bio"><h3>{isEnglish ? 'About' : 'बारे'}</h3><p>{doctor.bio}</p></div>}

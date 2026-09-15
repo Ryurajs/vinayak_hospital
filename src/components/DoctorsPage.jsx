@@ -3,6 +3,29 @@ import drDemoImage from '../../image/dr_demo.png';
 
 const fallbackDoctorImage = drDemoImage;
 
+const formatDoctorName = (name) => {
+  const raw = (name || '').toString().trim();
+  if (!raw) return '';
+
+  const normalized = raw.replace(/\s+/g, ' ').trim();
+
+  if (/^prof\.?\s*dr\.?\s+/i.test(normalized)) {
+    return normalized.replace(/^prof\.?\s*/i, 'Prof. ').replace(/\s+/g, ' ').trim();
+  }
+
+  if (/^dr\.?\s+/i.test(normalized)) {
+    return normalized.replace(/^dr\.?\s+/i, 'Dr. ');
+  }
+
+  if (/^yam\s+psd\.?\s+dwa$/i.test(normalized)) {
+    return 'Prof. Dr. Yam PSD. Dwa';
+  }
+
+  const withoutPrefix = normalized.replace(/^dr\.?\s+/i, '');
+  const titleCase = withoutPrefix.replace(/\b\w/g, (char) => char.toUpperCase());
+  return `Dr. ${titleCase}`;
+};
+
 function DoctorsPage({ language = 'en', doctors = [], onBack, onSelectDoctor }) {
   const isEnglish = language === 'en';
   const [query, setQuery] = useState('');
@@ -68,27 +91,27 @@ function DoctorsPage({ language = 'en', doctors = [], onBack, onSelectDoctor }) 
 
         <div className="doctor-controls" style={{ marginBottom: '1rem' }}>
           <div className="doctor-filter-row">
-            <div style={{ flex: '1 1 auto' }} />
-            <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+            <div className="doctor-filter-button-group">
               <button type="button" className={`doctor-filter-btn ${department === 'all' ? 'active' : ''}`} onClick={() => setDepartment('all')}>{isEnglish ? 'All' : 'सबै'}</button>
               <button type="button" className={`doctor-filter-btn ${department === 'Obstetrics & Gynaecology' ? 'active' : ''}`} onClick={() => setDepartment('Obstetrics & Gynaecology')}>{isEnglish ? 'Obstetrics & Gynaecology' : 'प्रसूति र स्त्रीरोग'}</button>
+            </div>
+
+            <div className="doctor-filter-input-row">
               <select className="doctor-select department-dropdown" value={department} onChange={(e) => setDepartment(e.target.value)} aria-label={isEnglish ? 'Select department' : 'विभाग छनौट गर्नुहोस्'}>
                 <option value="all">{isEnglish ? 'All Departments' : 'सबै विभाग'}</option>
                 {departments.map((d) => (
                   <option key={d} value={d}>{d}</option>
                 ))}
               </select>
-            </div>
-          </div>
 
-          <div style={{ marginTop: '0.75rem', display: 'flex', justifyContent: 'center' }}>
-            <input
-              aria-label={isEnglish ? 'Search doctors' : 'डाक्टर खोज्नुहोस्'}
-              className="doctor-search"
-              placeholder={isEnglish ? 'Search by name, department, disease...' : 'नाम, विभाग, रोगले खोज्नुहोस्...'}
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-            />
+              <input
+                aria-label={isEnglish ? 'Search doctors' : 'डाक्टर खोज्नुहोस्'}
+                className="doctor-search"
+                placeholder={isEnglish ? 'Search by name, department, disease...' : 'नाम, विभाग, रोगले खोज्नुहोस्...'}
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+              />
+            </div>
           </div>
         </div>
 
@@ -110,7 +133,7 @@ function DoctorsPage({ language = 'en', doctors = [], onBack, onSelectDoctor }) 
                     <span className="doctor-card-demo-dot" aria-hidden="true" />
                     <span className="specialty">{doctor.department || doctor.specialty}</span>
                   </div>
-                  <h3 className="doctor-card-demo-name">{doctor.name}</h3>
+                  <h3 className="doctor-card-demo-name">{formatDoctorName(doctor.name)}</h3>
                   <span>{doctor.specialty || doctor.department}{doctor.experience ? ` • ${doctor.experience}` : ''}</span>
                 </div>
               </div>

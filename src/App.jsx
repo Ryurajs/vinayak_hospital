@@ -94,6 +94,29 @@ const getYearsServingBadge = () => {
   return Math.max(30, years);
 };
 
+const formatDoctorName = (name) => {
+  const raw = (name || '').toString().trim();
+  if (!raw) return '';
+
+  const normalized = raw.replace(/\s+/g, ' ').trim();
+
+  if (/^prof\.?\s*dr\.?\s+/i.test(normalized)) {
+    return normalized.replace(/^prof\.?\s*/i, 'Prof. ').replace(/\s+/g, ' ').trim();
+  }
+
+  if (/^dr\.?\s+/i.test(normalized)) {
+    return normalized.replace(/^dr\.?\s+/i, 'Dr. ');
+  }
+
+  if (/^yam\s+psd\.?\s+dwa$/i.test(normalized)) {
+    return 'Prof. Dr. Yam PSD. Dwa';
+  }
+
+  const withoutPrefix = normalized.replace(/^dr\.?\s+/i, '');
+  const titleCase = withoutPrefix.replace(/\b\w/g, (char) => char.toUpperCase());
+  return `Dr. ${titleCase}`;
+};
+
 const realDoctors = [
   { name: 'USHA SHRESTHA', specialty: 'Obstetrics & Gynaecology', experience: 'Obstetrics & Gynaecology', department: 'Obstetrics & Gynaecology', image: doctor18Image },
   { name: 'Heempali Dutta', specialty: 'Ear, Nose & Throat Disorders and Surgery', experience: 'ENT Surgery', department: 'ENT Surgery', image: doctor1Image },
@@ -119,7 +142,7 @@ const translations = {
   en: {
     languageLabel: 'English',
     languageFlag: '🇬🇧',
-    nav: ['HOSPITAL OVERVIEW', 'OUR SERVICES', 'FIND A DOCTOR', 'DEPARTMENT', 'LAB REPORT', 'HEALTH PACKAGES', 'SUGGESTION', 'NEWS AND EVENTS'],
+    nav: ['HOSPITAL OVERVIEW', 'OUR SERVICES', 'FIND A DOCTOR', 'DEPARTMENT', 'HEALTH PACKAGES', 'LAB REPORT', 'SUGGESTION', 'NEWS AND EVENTS'],
     navItems: [
       {
         label: 'HOSPITAL OVERVIEW',
@@ -185,16 +208,16 @@ const translations = {
           { title: 'Urosurgery', text: 'Specialized surgical care for urinary and reproductive tract conditions.' },
         ],
       },
-      { label: 'LAB REPORT', href: 'https://labreport.merodoctor.com/212' },
       {
         label: 'HEALTH PACKAGES',
         href: '#health-packages',
         menu: [
-          { title: 'WHOLE BODY CHECKUP PLAN (A)', text: 'Total: Rs. 3,800/-', href: '#health-packages' },
-          { title: 'WHOLE BODY CHECKUP PLAN (B)', text: 'Total: Rs. 7,100/-', href: '#health-packages' },
-          { title: 'WHOLE BODY CHECKUP PLAN (C)', text: 'Total: Rs. 9,700/-', href: '#health-packages' },
+          { title: 'WHOLE BODY CHECKUP PLAN (A)', text: 'Total: Rs. 4,500/-', href: '#health-packages' },
+          { title: 'WHOLE BODY CHECKUP PLAN (B)', text: 'Total: Rs. 8,000/-', href: '#health-packages' },
+          { title: 'WHOLE BODY CHECKUP PLAN (C)', text: 'Total: Rs. 12,000/-', href: '#health-packages' },
         ],
       },
+      { label: 'LAB REPORT', href: 'https://labreport.merodoctor.com/212' },
       { label: 'SUGGESTION', href: '#suggestion' },
       { label: 'NEWS AND EVENTS', href: '#testimonials' },
     ],
@@ -246,7 +269,7 @@ const translations = {
     boardMembers: [
       { name: 'Rajesh Sharma', role: 'Chairperson', description: 'Guiding strategic growth, trust, and community-centered healthcare leadership.', image: boardMember2 },
       { name: 'Dr. Meera Joshi', role: 'Medical Director', description: 'Leading clinical quality, care standards, and compassionate service delivery.', image: boardMember3 },
-      { name: 'Krishna Prasad Lamichhane (KP)', role: 'Manager Director (MD)', description: 'Steering hospital leadership, operational excellence, and strategic care delivery.', image: boardMember1 },
+      { name: 'K.P. Lamichhane', role: 'Executive Chairman', description: 'Steering hospital leadership, operational excellence, and strategic care delivery.', image: boardMember1 },
       { name: 'Sita Rai', role: 'Community Outreach', description: 'Building neighborhood trust, healthcare access, and long-term patient support.', image: boardMember4 },
       { name: 'Nabin Adhikari', role: 'Governance Advisor', description: 'Helping shape transparent leadership, policy direction, and institutional progress.', image: boardMember5 },
     ],
@@ -450,7 +473,7 @@ const translations = {
   ne: {
     languageLabel: 'नेपाली',
     languageFlag: '🇳🇵',
-    nav: ['अस्पताल अवलोकन', 'हाम्रा सेवाहरू', 'डाक्टर खोज्नुहोस्', 'विभाग', 'ल्याब रिपोर्ट', 'स्वास्थ्य प्याकेज', 'सुझाव', 'समाचार र घटना'],
+    nav: ['अस्पताल अवलोकन', 'हाम्रा सेवाहरू', 'डाक्टर खोज्नुहोस्', 'विभाग', 'स्वास्थ्य प्याकेज', 'ल्याब रिपोर्ट', 'सुझाव', 'समाचार र घटना'],
     navItems: [
       {
         label: 'अस्पताल अवलोकन',
@@ -519,16 +542,16 @@ const translations = {
           { title: 'युरोसर्जरी', text: 'मूत्र र प्रजनन पथका अवस्थाहरूका लागि विशेषज्ञ शल्यक्रिया सेवा।' },
         ],
       },
-      { label: 'ल्याब रिपोर्ट', href: 'https://labreport.merodoctor.com/212' },
       {
         label: 'स्वास्थ्य प्याकेज',
         href: '#services',
         menu: [
-          { title: 'सम्पूर्ण शरीर जाँच योजना (A)', text: 'कुल रकम: रु. 3,800/-' },
-          { title: 'सम्पूर्ण शरीर जाँच योजना (B)', text: 'कुल रकम: रु. 7,100/-' },
-          { title: 'सम्पूर्ण शरीर जाँच योजना (C)', text: 'कुल रकम: रु. 9,700/-' },
+          { title: 'सम्पूर्ण शरीर जाँच योजना (A)', text: 'कुल रकम: रु. 4,500/-' },
+          { title: 'सम्पूर्ण शरीर जाँच योजना (B)', text: 'कुल रकम: रु. 8,000/-' },
+          { title: 'सम्पूर्ण शरीर जाँच योजना (C)', text: 'कुल रकम: रु. 12,000/-' },
         ],
       },
+      { label: 'ल्याब रिपोर्ट', href: 'https://labreport.merodoctor.com/212' },
       { label: 'सुझाव', href: '#suggestion' },
       { label: 'समाचार र घटना', href: '#testimonials' },
     ],
@@ -579,7 +602,7 @@ const translations = {
     boardMembers: [
       { name: 'राजेश शर्मा', role: 'अध्यक्ष', description: 'रणनीतिक विकास, विश्वास र समुदायकेन्द्रित स्वास्थ्य सेवा नेतृत्वलाई निर्देशित गर्ने।', image: boardMember2 },
       { name: 'डा. मीरा जोशी', role: 'चिकित्सा director', description: 'क्लिनिकल गुणस्तर, सेवा मानक र सहानुभूतिपूर्ण सेवा वितरणलाई नेतृत्व गर्ने।', image: boardMember3 },
-      { name: 'कृष्ण प्रसाद लमिछाने (के.पी.)', role: 'म्यानेजर डायरेक्टर (एमडी)', description: 'अस्पतालको नेतृत्व, परिचालन उत्कृष्टता र रणनीतिक सेवा वितरणलाई निर्देशित गर्ने।', image: boardMember1 },
+      { name: 'के.पी. लमिछाने', role: 'कार्यकारी अध्यक्ष', description: 'अस्पतालको नेतृत्व, परिचालन उत्कृष्टता र रणनीतिक सेवा वितरणलाई निर्देशित गर्ने।', image: boardMember1 },
       { name: 'सीता राई', role: 'समुदाय पहुँच', description: 'Neighbourhood विश्वास, स्वास्थ्य पहुँच र दीर्घकालीन बिरामी सहयोग निर्माण गर्ने।', image: boardMember4 },
       { name: 'नबिन अधिकारी', role: 'शासन सलाहकार', description: 'पारदर्शी नेतृत्व, नीति दिशा र संस्थागत प्रगतिको लागि सहयोग गर्ने।', image: boardMember5 },
     ],
@@ -2377,10 +2400,6 @@ function App() {
                   <MapPin size={14} strokeWidth={2} />
                   <span>{activeContactLocation}</span>
                 </a>
-                <a className="social-item search-pill" href="#contact" aria-label="Search">
-                  <Search size={14} strokeWidth={2} />
-                  <span>{t.topbar.search}</span>
-                </a>
               </div>
             </div>
           </div>
@@ -2769,37 +2788,24 @@ function App() {
               </div>
 
               <div className="board-grid">
-                {t.boardMembers.map((member) => {
-                  const dashNamesEn = new Set(['Rajesh Sharma', 'Dr. Meera Joshi', 'Sita Rai', 'Nabin Adhikari']);
-                  const dashNamesNp = new Set(['राजेश शर्मा', 'डा. मीरा जोशी', 'सीता राई', 'नबिन अधिकारी']);
-                  const isDashed = dashNamesEn.has(member.name) || dashNamesNp.has(member.name);
-                  return (
-                    <article key={member.name} className="board-card reveal">
-                      <div className={`board-media${!member.image ? ' board-media-placeholder' : ''}`}>
-                        {member.image ? (
-                          <img src={member.image} alt={member.name} />
-                        ) : (
-                          <svg className="board-profile-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-                            <path d="M12 12.2a4.15 4.15 0 1 0-4.15-4.15A4.15 4.15 0 0 0 12 12.2Zm0 2.1c-4.36 0-7.9 2.31-7.9 5.16v.94h15.8v-.94c0-2.85-3.54-5.16-7.9-5.16Z" fill="currentColor" />
-                          </svg>
-                        )}
-                      </div>
-                      <div className="board-content">
-                        {isDashed ? (
-                          <>
-                            <div className="board-dash">---------------</div>
-                          </>
-                        ) : (
-                          <> 
-                            <h3>{member.name}</h3>
-                            <span className="board-role">{member.role}</span>
-                          </>
-                        )}
-                        <p>{member.description}</p>
-                      </div>
-                    </article>
-                  );
-                })}
+                {t.boardMembers.map((member) => (
+                  <article key={member.name} className="board-card reveal">
+                    <div className={`board-media${!member.image ? ' board-media-placeholder' : ''}`}>
+                      {member.image ? (
+                        <img src={member.image} alt={member.name} />
+                      ) : (
+                        <svg className="board-profile-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                          <path d="M12 12.2a4.15 4.15 0 1 0-4.15-4.15A4.15 4.15 0 0 0 12 12.2Zm0 2.1c-4.36 0-7.9 2.31-7.9 5.16v.94h15.8v-.94c0-2.85-3.54-5.16-7.9-5.16Z" fill="currentColor" />
+                        </svg>
+                      )}
+                    </div>
+                    <div className="board-content">
+                      <h3>{member.name}</h3>
+                      <span className="board-role">{member.role}</span>
+                      <p>{member.description}</p>
+                    </div>
+                  </article>
+                ))}
               </div>
             </div>
           </section>
@@ -2874,7 +2880,7 @@ function App() {
                           <span className="doctor-card-demo-dot" aria-hidden="true" />
                           <span className="specialty">{doctor.department || doctor.specialty}</span>
                         </div>
-                        <h3 className="doctor-card-demo-name">{doctor.name}</h3>
+                        <h3 className="doctor-card-demo-name">{formatDoctorName(doctor.name)}</h3>
                         <span>{doctor.specialty || doctor.department}{doctor.experience ? ` • ${doctor.experience}` : ''}</span>
                       </div>
                     </div>
