@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="icon" type="image/png" href="/image/fav-icon.png" />
+    <link rel="icon" type="image/x-icon" href="/favicon.ico" />
     <title>Suggestions - Vinayak Portal</title>
     <style>
       :root {
@@ -55,6 +55,10 @@
       .page-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 0 0 14px; }
       h1 { margin: 0; font-size: clamp(1.2rem, 1.6vw, 1.5rem); line-height: 1.2; font-weight: 800; letter-spacing: 0.02em; color: #141E5C; }
       .suggestion-total { display: inline-flex; align-items: center; justify-content: center; padding: 6px 10px; border-radius: 999px; background: #f4f6ff; color: #141E5C; border: 1px solid rgba(20, 30, 92, 0.12); font-size: 0.74rem; font-weight: 700; white-space: nowrap; }
+      .page-header-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; justify-content: flex-end; }
+      .generate-qr-button { display: inline-flex; align-items: center; gap: 7px; border: 1px solid rgba(20, 30, 92, 0.12); border-radius: 10px; background: #141E5C; color: #fff; padding: 8px 12px; font-size: 0.74rem; font-weight: 700; cursor: pointer; }
+      .generate-qr-button:hover { background: #0f173f; }
+      .generate-qr-button svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
       .table-wrap { width: 100%; background: var(--panel); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; box-shadow: 0 10px 24px rgba(20, 30, 66, 0.04); }
       table { width: 100%; border-collapse: collapse; }
       th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--border); font-size: 0.82rem; }
@@ -121,6 +125,9 @@
         line-height: 1.7;
         white-space: pre-line;
       }
+      .qr-modal-body { display: grid; justify-items: center; gap: 12px; text-align: center; }
+      .suggestion-qr-image { width: 240px; height: 240px; max-width: 100%; border: 1px solid var(--border); border-radius: 10px; }
+      .qr-modal-note { margin: 0; color: var(--muted); font-size: 0.78rem; }
     </style>
   </head>
   <body>
@@ -176,8 +183,14 @@
 
         <div class="container">
           <div class="page-header">
-            <h1>Suggestions</h1>
-            <span class="suggestion-total">Total Suggestions: {{ suggestion_count }}</span>
+            <h1>Suggestion Qr</h1>
+            <div class="page-header-actions">
+              <button type="button" class="generate-qr-button" id="generateSuggestionQr" aria-label="Generate Suggestion QR">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="6" height="6"/><rect x="14" y="4" width="6" height="6"/><rect x="4" y="14" width="6" height="6"/><path d="M14 14h3v3h3v3M14 20v-3"/></svg>
+                Generate Suggestion QR
+              </button>
+              <span class="suggestion-total">Total Suggestions: {{ suggestion_count }}</span>
+            </div>
           </div>
 
           <div class="table-wrap">
@@ -234,6 +247,20 @@
       </div>
     </div>
 
+    <div class="message-modal-backdrop" id="suggestionQrModalBackdrop" aria-hidden="true">
+      <div class="message-modal" role="dialog" aria-modal="true" aria-labelledby="suggestionQrModalTitle">
+        <div class="message-modal-header">
+          <h3 id="suggestionQrModalTitle">Suggestion QR Code</h3>
+          <button type="button" class="message-modal-close" id="suggestionQrModalClose" aria-label="Close">×</button>
+        </div>
+        <div class="message-modal-body qr-modal-body">
+          <img class="suggestion-qr-image" id="suggestionQrImage" alt="QR code linking to the suggestion page" />
+          <p class="qr-modal-note">Scan this QR code to open the public suggestion page.</p>
+          <a class="generate-qr-button" id="downloadSuggestionQr" href="#" download="suggestion-qr.png">Download QR</a>
+        </div>
+      </div>
+    </div>
+
     <script>
       const sidebar = document.getElementById('portalSidebar');
       const toggleButton = document.querySelector('.sidebar-toggle');
@@ -241,6 +268,12 @@
       const modalBody = document.getElementById('messageModalBody');
       const modalTitle = document.getElementById('messageModalTitle');
       const modalClose = document.getElementById('messageModalClose');
+      const suggestionQrButton = document.getElementById('generateSuggestionQr');
+      const suggestionQrBackdrop = document.getElementById('suggestionQrModalBackdrop');
+      const suggestionQrClose = document.getElementById('suggestionQrModalClose');
+      const suggestionQrImage = document.getElementById('suggestionQrImage');
+      const downloadSuggestionQr = document.getElementById('downloadSuggestionQr');
+      const suggestionPageUrl = 'https://vinayakhospital.com.np/#suggestion';
 
       function setToggleIcon(isCollapsed) {
         if (!toggleButton) return;
@@ -279,6 +312,36 @@
         modalBackdrop.addEventListener('click', (event) => {
           if (event.target === modalBackdrop) {
             closeMessageModal();
+          }
+        });
+      }
+
+      function closeSuggestionQrModal() {
+        if (!suggestionQrBackdrop) return;
+        suggestionQrBackdrop.classList.remove('visible');
+        suggestionQrBackdrop.setAttribute('aria-hidden', 'true');
+      }
+
+      if (suggestionQrButton && suggestionQrBackdrop && suggestionQrImage) {
+        suggestionQrButton.addEventListener('click', () => {
+          const qrImageUrl = `https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=${encodeURIComponent(suggestionPageUrl)}`;
+          suggestionQrImage.src = qrImageUrl;
+          if (downloadSuggestionQr) {
+            downloadSuggestionQr.href = qrImageUrl;
+          }
+          suggestionQrBackdrop.classList.add('visible');
+          suggestionQrBackdrop.setAttribute('aria-hidden', 'false');
+        });
+      }
+
+      if (suggestionQrClose) {
+        suggestionQrClose.addEventListener('click', closeSuggestionQrModal);
+      }
+
+      if (suggestionQrBackdrop) {
+        suggestionQrBackdrop.addEventListener('click', (event) => {
+          if (event.target === suggestionQrBackdrop) {
+            closeSuggestionQrModal();
           }
         });
       }

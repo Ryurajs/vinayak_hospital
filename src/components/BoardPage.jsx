@@ -1,17 +1,21 @@
 import React, { useEffect } from 'react';
-import bodBgImage from '../../image/bod_bg.png';
+import bodBgImage from '../../image/bod_bg.webp';
 
 function BoardPage({ language = 'en', members = [], onBack }) {
   const isEnglish = language === 'en';
+  const boardGroups = members.reduce((groups, member) => {
+    const category = member.category || (isEnglish ? 'Board of Directors' : 'बोर्ड अफ डाइरेक्टर');
+    const existingGroup = groups.find((group) => group.category === category);
+    if (existingGroup) {
+      existingGroup.members.push(member);
+    } else {
+      groups.push({ category, members: [member] });
+    }
+    return groups;
+  }, []);
 
   useEffect(() => {
-    // dev debug: log member image sources to help diagnose identical-image issue
-    try {
-      // eslint-disable-next-line no-console
-      console.log('BoardPage members images:', members.map((m) => m.image));
-    } catch (e) {
-      // ignore
-    }
+    return undefined;
   }, [members]);
 
   return (
@@ -23,7 +27,7 @@ function BoardPage({ language = 'en', members = [], onBack }) {
         }}
       >
         <div className="container bod-hero-inner">
-          <p className="eyebrow">{isEnglish ? 'Board of Director (BOD)' : 'बोर्ड अफ डाइरेक्टर (BOD)'}</p>
+          <p className="eyebrow">{isEnglish ? 'Leaders' : 'नेतृत्व'}</p>
           <h1>{isEnglish ? 'Leadership that shapes our care.' : 'हाम्रो सेवा निर्माण गर्ने नेतृत्व।'}</h1>
           <p>
             {isEnglish
@@ -35,16 +39,20 @@ function BoardPage({ language = 'en', members = [], onBack }) {
 
       <div className="container bod-content-wrap">
         <div className="section-head reveal bod-page-head">
-          <p className="eyebrow">{isEnglish ? 'Board of Director (BOD)' : 'बोर्ड अफ डाइरेक्टर (BOD)'}</p>
+          <p className="eyebrow">{isEnglish ? 'Leaders' : 'नेतृत्व'}</p>
           <h2>
             <span className="board-heading-line">{isEnglish ? 'THE LEADERSHIP TEAM' : 'नेतृत्व टोली'}</span>
             <span className="board-heading-callout">{isEnglish ? 'BEHIND OUR HOSPITAL VISION.' : 'हाम्रो अस्पतालको विजन पछाडि।'}</span>
           </h2>
         </div>
 
-        <div className="doctor-grid">
-          {members.map((member) => (
-            <article key={member.name} className="doctor-card reveal doctor-card-feature board-doctor-card" role="button" tabIndex={0} onClick={() => onBack && onBack()} onKeyDown={(e) => { if (e.key === 'Enter') onBack && onBack(); }}>
+        <div className="board-page-groups">
+          {boardGroups.map((group) => (
+            <section className="board-page-group" key={group.category}>
+              <h3 className="board-category-heading">{group.category}</h3>
+              <div className="doctor-grid">
+                {group.members.map((member) => (
+                  <article key={member.name} className="doctor-card reveal doctor-card-feature board-doctor-card" role="button" tabIndex={0} onClick={() => onBack && onBack()} onKeyDown={(e) => { if (e.key === 'Enter') onBack && onBack(); }}>
               <div className="doctor-card-demo-visual board-media">
                 {member.image ? (
                   <img
@@ -67,10 +75,12 @@ function BoardPage({ language = 'en', members = [], onBack }) {
                   </div>
                   <h3 className="doctor-card-demo-name">{member.name}</h3>
                   <span>{member.description}</span>
-                  <div className="debug-image-name" aria-hidden="true">{member.image ? member.image.toString().split('/').pop() : 'no-image'}</div>
                 </div>
               </div>
-            </article>
+                  </article>
+                ))}
+              </div>
+            </section>
           ))}
         </div>
       </div>

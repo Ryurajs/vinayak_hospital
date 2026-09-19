@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import drDemoImage from '../../image/dr_demo.png';
+import drDemoImage from '../../image/dr_demo.webp';
 
 const fallbackDoctorImage = drDemoImage;
 

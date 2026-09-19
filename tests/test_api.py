@@ -241,6 +241,15 @@ class ApiTestCase(unittest.TestCase):
         self.assertEqual(response.status_code, 302)
         self.assertIn('account_updated=1', response.location)
 
+    def test_flask_secret_is_not_hardcoded_default(self):
+        self.assertNotEqual(flask_app.config.get('SECRET_KEY'), 'vinayak-hospital-portal-secret')
+        self.assertTrue(flask_app.config.get('SECRET_KEY'))
+
+    def test_cors_does_not_allow_wildcard_in_production_defaults(self):
+        cors_resources = flask_app.config.get('CORS_RESOURCES', {})
+        self.assertIsInstance(cors_resources, dict)
+        self.assertNotIn('*', str(cors_resources))
+
     def test_health_package_delete_page_uses_sweetalert_confirmation(self):
         with self.client.session_transaction() as session:
             session['logged_in'] = True
@@ -382,7 +391,7 @@ class ApiTestCase(unittest.TestCase):
                 'name': 'Rajesh Sharma Updated',
                 'role': 'Chairperson',
                 'description': 'Updated leadership summary',
-                'image': '/image/bod2.png',
+                'image': '/image/bod2.webp',
             },
             follow_redirects=False,
         )

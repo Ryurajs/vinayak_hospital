@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Board of Directors - Vinayak Portal</title>
-    <link rel="icon" type="image/png" href="/image/fav-icon.png" />
+    <link rel="icon" type="image/x-icon" href="/favicon.ico" />
     <style>
       :root {
         --bg: #f5f4ff;
@@ -554,6 +554,24 @@
       .icon-btn.delete:hover {
         background: #fff1f1;
       }
+      .page-header-actions { display: flex; align-items: center; gap: 10px; }
+      .category-button { border: 1px solid rgba(20, 30, 92, 0.12); border-radius: 10px; padding: 8px 12px; background: #141E5C; color: #fff; font: inherit; font-size: 0.74rem; font-weight: 700; cursor: pointer; }
+      .category-modal-backdrop { position: fixed; inset: 0; display: none; align-items: center; justify-content: center; padding: 20px; background: rgba(15, 22, 45, 0.55); z-index: 1000; }
+      .category-modal-backdrop.visible { display: flex; }
+      .category-modal { width: min(560px, 100%); max-height: min(680px, 90vh); overflow-y: auto; background: #fff; border-radius: 14px; border: 1px solid rgba(20, 30, 92, 0.08); }
+      .category-modal-header { display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; background: #f8f8ff; border-bottom: 1px solid var(--border); }
+      .category-modal-header h2 { margin: 0; font-size: 1rem; color: #141E5C; }
+      .category-modal-close { width: 30px; height: 30px; border: 1px solid rgba(20, 30, 92, 0.12); border-radius: 8px; background: #fff; color: #141E5C; cursor: pointer; }
+      .category-modal-body { padding: 16px; display: grid; gap: 16px; }
+      .category-add-form { display: flex; gap: 8px; }
+      .category-add-form input { flex: 1; min-width: 0; border: 1px solid rgba(20, 30, 92, 0.12); border-radius: 10px; padding: 9px 11px; font: inherit; }
+      .category-list { display: grid; gap: 8px; }
+      .category-row { display: flex; align-items: center; gap: 8px; padding: 8px; border: 1px solid var(--border); border-radius: 10px; }
+      .category-row form:first-child { display: flex; flex: 1; gap: 8px; }
+      .category-row input { flex: 1; min-width: 0; border: 1px solid rgba(20, 30, 92, 0.12); border-radius: 8px; padding: 7px 9px; font: inherit; }
+      .category-row button { border: 0; border-radius: 8px; padding: 7px 9px; background: #eef0ff; color: #141E5C; font: inherit; font-size: 0.72rem; font-weight: 700; cursor: pointer; }
+      .category-row .delete-category { background: #fff1f1; color: #b42318; }
+      select { width: 100%; border: 1px solid rgba(20, 30, 92, 0.12); border-radius: 10px; padding: 10px 12px; font: inherit; color: var(--text); background: #fff; }
     </style>
   </head>
   <body>
@@ -633,21 +651,25 @@
         <div class="container">
           <div class="page-header">
             <h1>Board of Directors (BOD)</h1>
-            <span class="status-badge">Total BOD: {{ board_members|length }}</span>
+            <div class="page-header-actions">
+              <button type="button" class="category-button" id="categoryButton">Category</button>
+              <span class="status-badge">Total BOD: {{ board_members|length }}</span>
+            </div>
           </div>
 
           <div class="tabs" role="tablist" aria-label="Board of Directors pages">
-            <button type="button" class="tab-button active" data-panel="add" aria-selected="true">Add BOD</button>
-            <button type="button" class="tab-button" data-panel="list" aria-selected="false">BOD List</button>
+            <button type="button" class="tab-button{% if active_panel == 'add' %} active{% endif %}" data-panel="add" aria-selected="{{ 'true' if active_panel == 'add' else 'false' }}">Add BOD</button>
+            <button type="button" class="tab-button{% if active_panel == 'list' %} active{% endif %}" data-panel="list" aria-selected="{{ 'true' if active_panel == 'list' else 'false' }}">BOD List</button>
           </div>
 
-          <div class="tab-panel active" id="tab-add">
-            <div class="table-wrap">
+          <div class="tab-panel{% if active_panel == 'add' %} active{% endif %}" id="tab-add">
+            <form class="table-wrap" method="post" action="{{ url_for('portal_create_bod_member') }}" enctype="multipart/form-data">
               <table>
                 <thead>
                   <tr>
                     <th>Full Name</th>
                     <th>Role</th>
+                    <th>Category</th>
                     <th>Profile Summary</th>
                     <th>Image</th>
                     <th>Action</th>
@@ -657,37 +679,47 @@
                   <tr>
                     <td>
                       <div class="field">
-                        <input type="text" placeholder="Enter full name" />
+                        <input type="text" name="name" placeholder="Enter full name" required />
                       </div>
                     </td>
                     <td>
                       <div class="field">
-                        <input type="text" placeholder="e.g. Chairperson" />
+                        <input type="text" name="role" placeholder="e.g. Chairperson" required />
                       </div>
                     </td>
                     <td>
                       <div class="field">
-                        <textarea placeholder="Enter profile summary"></textarea>
+                        <select name="category">
+                          <option value="">Select category</option>
+                          {% for category in categories %}
+                            <option value="{{ category.name }}">{{ category.name }}</option>
+                          {% endfor %}
+                        </select>
                       </div>
                     </td>
                     <td>
                       <div class="field">
-                        <input type="file" />
+                        <textarea name="description" placeholder="Enter profile summary"></textarea>
+                      </div>
+                    </td>
+                    <td>
+                      <div class="field">
+                        <input type="file" name="image" accept=".jpg,.jpeg,.png,.webp" />
                       </div>
                     </td>
                     <td>
                       <div class="action-group">
-                        <button type="button" class="secondary-btn">Clear</button>
-                        <button type="button" class="primary-btn">Save</button>
+                        <button type="reset" class="secondary-btn">Clear</button>
+                        <button type="submit" class="primary-btn">Save</button>
                       </div>
                     </td>
                   </tr>
                 </tbody>
               </table>
-            </div>
+            </form>
           </div>
 
-          <div class="tab-panel" id="tab-list">
+          <div class="tab-panel{% if active_panel == 'list' %} active{% endif %}" id="tab-list">
             <div class="table-wrap">
               <table>
                 <thead>
@@ -696,6 +728,7 @@
                     <th>Image</th>
                     <th>Name</th>
                     <th>Role</th>
+                    <th>Category</th>
                     <th>Summary</th>
                     <th style="text-align: right;">Action</th>
                   </tr>
@@ -703,23 +736,24 @@
                 <tbody id="bodTableBody">
                   {% if board_members %}
                     {% for member in board_members %}
-                      <tr draggable="true" data-member-id="{{ member.id }}">
+                      <tr data-member-id="{{ member.id }}">
                         <td>
                           <div class="order-cell">
-                            <span class="drag-handle" aria-label="Drag to reorder">↕</span>
+                            <span class="drag-handle" aria-label="Drag to reorder" title="Drag to reorder">↕</span>
                             <span class="badge">{{ loop.index }}</span>
                           </div>
                         </td>
                         <td><img src="{{ member.image }}" alt="{{ member.name }}" style="width:56px;height:56px;border-radius:10px;object-fit:cover;display:block;" /></td>
                         <td>{{ member.name }}</td>
                         <td>{{ member.role }}</td>
+                        <td>{{ member.category or '—' }}</td>
                         <td>{{ member.description }}</td>
                         <td>
                           <div class="table-actions">
-                            <a class="icon-btn" href="{{ url_for('portal_edit_bod_member', member_id=member.id) }}" aria-label="Edit {{ member.name }}" title="Edit board member">
+                            <a class="icon-btn" href="{{ url_for('portal_edit_bod_member', member_id=member.id, panel='list') }}" aria-label="Edit {{ member.name }}" title="Edit board member">
                               <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 1 1 3 3L7 19l-4 1 1-4 12.5-12.5Z"/></svg>
                             </a>
-                            <form method="post" action="{{ url_for('portal_delete_bod_member', member_id=member.id) }}" onsubmit="return confirm('Delete this board member?');" style="margin:0;">
+                            <form method="post" action="{{ url_for('portal_delete_bod_member', member_id=member.id) }}" class="delete-bod-form" data-member-name="{{ member.name }}" style="margin:0;">
                               <button type="submit" class="icon-btn delete" aria-label="Delete {{ member.name }}" title="Delete board member">
                                 <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/></svg>
                               </button>
@@ -730,7 +764,7 @@
                     {% endfor %}
                   {% else %}
                     <tr>
-                      <td colspan="6">
+                      <td colspan="7">
                         <div class="empty">No board members found.</div>
                       </td>
                     </tr>
@@ -743,9 +777,118 @@
       </main>
     </div>
 
+    <div class="category-modal-backdrop" id="categoryModalBackdrop" aria-hidden="true">
+      <section class="category-modal" role="dialog" aria-modal="true" aria-labelledby="categoryModalTitle">
+        <header class="category-modal-header">
+          <h2 id="categoryModalTitle">Manage Categories</h2>
+          <button type="button" class="category-modal-close" id="categoryModalClose" aria-label="Close">×</button>
+        </header>
+        <div class="category-modal-body">
+          <form class="category-add-form" method="post" action="{{ url_for('portal_create_bod_category') }}">
+            <input name="name" type="text" placeholder="Enter category name" required />
+            <button type="submit" class="primary-btn">Add</button>
+          </form>
+          <div class="category-list">
+            {% for category in categories %}
+              <div class="category-row">
+                <form method="post" action="{{ url_for('portal_update_bod_category', category_id=category.id) }}">
+                  <input name="name" value="{{ category.name }}" required aria-label="Category name" />
+                  <button type="submit">Save</button>
+                </form>
+                <form method="post" action="{{ url_for('portal_delete_bod_category', category_id=category.id) }}" class="delete-category-form" data-category-name="{{ category.name }}">
+                  <button type="submit" class="delete-category">Delete</button>
+                </form>
+              </div>
+            {% else %}
+              <div class="empty">No categories found.</div>
+            {% endfor %}
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
+      document.querySelectorAll('.delete-category-form').forEach((form) => {
+        form.addEventListener('submit', (event) => {
+          event.preventDefault();
+          const categoryName = form.dataset.categoryName || 'this category';
+          Swal.fire({
+            icon: 'warning',
+            title: 'Delete this category?',
+            text: `${categoryName} will be removed permanently.`,
+            showCancelButton: true,
+            confirmButtonText: 'Yes, delete it',
+            cancelButtonText: 'Cancel',
+            confirmButtonColor: '#b42318',
+            cancelButtonColor: '#141E5C',
+          }).then((result) => {
+            if (result.isConfirmed) form.submit();
+          });
+        });
+      });
+
+      {% if added_member_name %}
+        Swal.fire({
+          icon: 'success',
+          title: 'BOD Member Added',
+          text: {{ added_member_name|tojson }} + ' was added successfully.',
+          confirmButtonColor: '#141E5C',
+        });
+      {% endif %}
+
+      document.querySelectorAll('.delete-bod-form').forEach((form) => {
+        form.addEventListener('submit', (event) => {
+          event.preventDefault();
+          const memberName = form.dataset.memberName || 'this board member';
+          Swal.fire({
+            icon: 'warning',
+            title: 'Delete this board member?',
+            text: `${memberName} will be removed permanently.`,
+            showCancelButton: true,
+            confirmButtonText: 'Yes, delete it',
+            cancelButtonText: 'Cancel',
+            confirmButtonColor: '#b42318',
+            cancelButtonColor: '#141E5C',
+          }).then((result) => {
+            if (result.isConfirmed) {
+              form.submit();
+            }
+          });
+        });
+      });
+
       const tabButtons = document.querySelectorAll('.tab-button');
       const tabPanels = document.querySelectorAll('.tab-panel');
+      const categoryButton = document.getElementById('categoryButton');
+      const categoryModalBackdrop = document.getElementById('categoryModalBackdrop');
+      const categoryModalClose = document.getElementById('categoryModalClose');
+
+      function closeCategoryModal() {
+        if (!categoryModalBackdrop) return;
+        categoryModalBackdrop.classList.remove('visible');
+        categoryModalBackdrop.setAttribute('aria-hidden', 'true');
+        const cleanUrl = new URL(window.location.href);
+        cleanUrl.searchParams.delete('category');
+        window.history.replaceState({}, '', `${cleanUrl.pathname}${cleanUrl.search}${cleanUrl.hash}`);
+      }
+
+      if (categoryButton && categoryModalBackdrop) {
+        categoryButton.addEventListener('click', () => {
+          categoryModalBackdrop.classList.add('visible');
+          categoryModalBackdrop.setAttribute('aria-hidden', 'false');
+        });
+      }
+
+      {% if category_open %}
+        categoryModalBackdrop?.classList.add('visible');
+        categoryModalBackdrop?.setAttribute('aria-hidden', 'false');
+      {% endif %}
+
+      categoryModalClose?.addEventListener('click', closeCategoryModal);
+      categoryModalBackdrop?.addEventListener('click', (event) => {
+        if (event.target === categoryModalBackdrop) closeCategoryModal();
+      });
 
       tabButtons.forEach((button) => {
         button.addEventListener('click', () => {
@@ -766,6 +909,7 @@
       const bodTableBody = document.getElementById('bodTableBody');
       if (bodTableBody) {
         let draggedRow = null;
+        let pointerDragging = false;
 
         function syncBodOrderNumbers() {
           Array.from(bodTableBody.children).forEach((row, index) => {
@@ -776,10 +920,53 @@
           });
         }
 
+        async function persistBodOrder() {
+          const memberIds = Array.from(bodTableBody.children)
+            .map((item) => Number(item.dataset.memberId))
+            .filter((id) => Number.isFinite(id));
+
+          try {
+            const response = await fetch('/portal/add-bod/reorder', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ member_ids: memberIds }),
+              credentials: 'same-origin',
+            });
+
+            if (!response.ok) console.error('Failed to update BOD order');
+          } catch (error) {
+            console.error('Failed to update BOD order', error);
+          }
+        }
+
+        function moveRowToPointerTarget(event) {
+          if (!pointerDragging || !draggedRow) return;
+          const target = document.elementFromPoint(event.clientX, event.clientY)?.closest('#bodTableBody > tr');
+          if (!target || target === draggedRow) return;
+
+          const targetRect = target.getBoundingClientRect();
+          const insertAfter = event.clientY > targetRect.top + targetRect.height / 2;
+          if (insertAfter) {
+            bodTableBody.insertBefore(draggedRow, target.nextSibling);
+          } else {
+            bodTableBody.insertBefore(draggedRow, target);
+          }
+          syncBodOrderNumbers();
+        }
+
         Array.from(bodTableBody.children).forEach((row) => {
-          row.addEventListener('dragstart', () => {
+          const dragHandle = row.querySelector('.drag-handle');
+
+          dragHandle?.addEventListener('pointerdown', (event) => {
+            event.preventDefault();
+            pointerDragging = true;
             draggedRow = row;
             row.classList.add('dragging');
+            dragHandle.setPointerCapture?.(event.pointerId);
+          });
+
+          dragHandle?.addEventListener('dragstart', (event) => {
+            event.preventDefault();
           });
 
           row.addEventListener('dragover', (event) => {
@@ -791,48 +978,16 @@
             row.classList.remove('drag-over');
           });
 
-          row.addEventListener('drop', async (event) => {
-            event.preventDefault();
-            row.classList.remove('drag-over');
+        });
 
-            if (!draggedRow || draggedRow === row) return;
-
-            const rows = Array.from(bodTableBody.children);
-            const fromIndex = rows.indexOf(draggedRow);
-            const toIndex = rows.indexOf(row);
-
-            if (fromIndex < toIndex) {
-              bodTableBody.insertBefore(draggedRow, row.nextSibling);
-            } else {
-              bodTableBody.insertBefore(draggedRow, row);
-            }
-
-            syncBodOrderNumbers();
-
-            const memberIds = Array.from(bodTableBody.children)
-              .map((item) => Number(item.dataset.memberId))
-              .filter((id) => Number.isFinite(id));
-
-            try {
-              const response = await fetch('/portal/add-bod/reorder', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ member_ids: memberIds }),
-                credentials: 'same-origin',
-              });
-
-              if (!response.ok) {
-                console.error('Failed to update BOD order');
-              }
-            } catch (error) {
-              console.error('Failed to update BOD order', error);
-            }
-          });
-
-          row.addEventListener('dragend', () => {
-            row.classList.remove('dragging', 'drag-over');
-            draggedRow = null;
-          });
+        document.addEventListener('pointermove', moveRowToPointerTarget);
+        document.addEventListener('pointerup', async () => {
+          if (!pointerDragging) return;
+          pointerDragging = false;
+          if (draggedRow) draggedRow.classList.remove('dragging');
+          document.querySelectorAll('#bodTableBody .drag-over').forEach((row) => row.classList.remove('drag-over'));
+          draggedRow = null;
+          await persistBodOrder();
         });
       }
     </script>

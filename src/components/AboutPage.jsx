@@ -1,7 +1,7 @@
 import { ArrowRight, Award, HeartHandshake, Layers, Sparkles, Users } from 'lucide-react';
-import whyToChooseUsImage from '../../image/whytochooseus.jpg';
-import whyToChooseUsImage1 from '../../image/whytochooseus1.jpg';
-import whyToChooseUsImage2 from '../../image/whytochooseus2.jpg';
+import whyToChooseUsImage from '../../image/whytochooseus.webp';
+import whyToChooseUsImage1 from '../../image/whytochooseus1.webp';
+import whyToChooseUsImage2 from '../../image/whytochooseus2.webp';
 
 function AboutPage({ language, onBack }) {
   const isEnglish = language === 'en';

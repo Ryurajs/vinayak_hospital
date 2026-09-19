@@ -172,6 +172,16 @@
         </div>
 
         <div class="field">
+          <label for="category">Category</label>
+          <select id="category" name="category">
+            <option value="">Select category</option>
+            {% for category in categories %}
+              <option value="{{ category.name }}" {% if member.category == category.name %}selected{% endif %}>{{ category.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="field">
           <label for="description">Description</label>
           <textarea id="description" name="description">{{ member.description or '' }}</textarea>
         </div>
