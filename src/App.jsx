@@ -1325,7 +1325,7 @@ function App() {
         document.body.classList.remove('local-origin');
       }
 
-      if (isLocalHost && isHomeRoot) {
+      if (isHomeRoot) {
         document.body.classList.add('home-nav-white');
       } else {
         document.body.classList.remove('home-nav-white');
