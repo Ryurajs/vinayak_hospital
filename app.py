@@ -79,7 +79,7 @@ def health():
     return jsonify({"status": "ok", "message": "Vinayak Hospital API is running."})
 
 
-@app.get('/portal')
+@app.get('/portal/')
 def portal_home():
     if not session.get('logged_in'):
         return redirect(url_for('portal_login_page'))
