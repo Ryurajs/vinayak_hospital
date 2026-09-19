@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="icon" type="image/png" href="/image/fav-icon.png" />
+    <link rel="icon" type="image/x-icon" href="/favicon.ico" />
     <title>News & Events - Vinayak Portal</title>
     <style>
       :root {
@@ -127,6 +127,9 @@
       .tabs { display: flex; gap: 10px; margin: 18px 0 14px; flex-wrap: wrap; }
       .tab-button { border: 1px solid rgba(20, 30, 92, 0.12); background: #fff; color: #141E5C; border-radius: 999px; padding: 10px 16px; font-size: 0.76rem; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; cursor: pointer; }
       .tab-button.active { background: #141E5C; color: #fff; border-color: #141E5C; }
+      .image-tabs { display: flex; gap: 10px; margin: 0 0 14px; flex-wrap: wrap; }
+      .image-tab { border: 1px solid rgba(20, 30, 92, 0.12); background: #fff; color: #141E5C; border-radius: 999px; padding: 8px 14px; font-size: 0.7rem; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; cursor: pointer; }
+      .image-tab.active { background: #141E5C; color: #fff; border-color: #141E5C; }
       .video-tabs { display: flex; gap: 10px; margin: 0 0 14px; flex-wrap: wrap; }
       .video-tab { border: 1px solid rgba(20, 30, 92, 0.12); background: #fff; color: #141E5C; border-radius: 999px; padding: 8px 14px; font-size: 0.7rem; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; cursor: pointer; }
       .video-tab.active { background: #141E5C; color: #fff; border-color: #141E5C; }
@@ -145,6 +148,8 @@
         border: 2px dashed #d32f2f;
         box-shadow: 0 0 0 4px rgba(211, 47, 47, 0.08);
       }
+      .image-delete-form { position: absolute; top: 8px; right: 8px; z-index: 2; margin: 0; }
+      .image-delete-form .icon-button { background: rgba(211, 51, 51, 0.94); color: #fff; }
       .media-card-number {
         position: absolute; top: 8px; left: 8px; z-index: 2;
         display: inline-flex; align-items: center; justify-content: center;
@@ -242,6 +247,11 @@
             <button type="button" class="tab-button" data-panel="list">Card List</button>
           </div>
 
+          <div class="image-tabs" style="display: none; margin-top: 8px;">
+            <button type="button" class="image-tab active" data-image-panel="image">Add Image</button>
+            <button type="button" class="image-tab" data-image-panel="image-list">Image List</button>
+          </div>
+
           <div class="tab-panel active" id="tab-add">
             <section class="add-card">
               <div class="add-card-title">Add Card</div>
@@ -333,7 +343,7 @@
                               <a class="icon-button icon-button--edit" href="{{ url_for('portal_news_event_edit', event_id=item.id) }}" aria-label="Edit {{ item.title }}" title="Edit event">
                                 <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 1 1 3 3L7 19l-4 1 1-4 12.5-12.5Z"/></svg>
                               </a>
-                              <form method="post" action="{{ url_for('portal_news_events_delete', event_id=item.id) }}" onsubmit="return confirm('Delete this event?');">
+                              <form method="post" action="{{ url_for('portal_news_events_delete', event_id=item.id) }}" class="delete-confirm-form" data-item-name="{{ item.title }}" data-item-type="event">
                                 <button class="icon-button icon-button--delete" type="submit" aria-label="Delete {{ item.title }}" title="Delete event">
                                   <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/></svg>
                                 </button>
@@ -374,15 +384,22 @@
             <section class="add-card">
               <div class="add-card-title">Image List</div>
               {% if gallery_images %}
-                <div class="media-grid">
+                <div class="media-grid gallery-image-grid">
                   {% for image in gallery_images %}
-                    <div class="media-card">
+                    <div class="media-card" draggable="true" data-image-url="{{ image.src }}">
+                      <span class="media-card-number">{{ loop.index }}</span>
                       <div class="media-card-body">
                         <img src="{{ image.src }}" alt="{{ image.alt }}" />
                       </div>
                       {% if image.header %}
                         <div class="media-card-header">{{ image.header }}</div>
                       {% endif %}
+                      <form method="post" action="{% if image.is_default %}{{ url_for('portal_delete_default_gallery_image') }}{% else %}{{ url_for('portal_news_events_delete', event_id=image.id) }}{% endif %}" class="image-delete-form" data-item-name="{{ image.header or image.alt }}">
+                        {% if image.is_default %}<input type="hidden" name="image_url" value="{{ image.src }}" />{% endif %}
+                        <button class="icon-button icon-button--delete" type="submit" aria-label="Delete {{ image.header or image.alt }}" title="Delete image">
+                          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/></svg>
+                        </button>
+                      </form>
                     </div>
                   {% endfor %}
                 </div>
@@ -533,6 +550,13 @@
                               <source src="{{ video.href }}" />
                             </video>
                           {% endif %}
+                          {% if video.id is defined and video.id is not none %}
+                            <form method="post" action="{{ url_for('portal_news_events_video_delete', event_id=video.id) }}" class="image-delete-form" data-item-name="{{ video.title }}">
+                              <button class="icon-button icon-button--delete" type="submit" aria-label="Delete {{ video.title }}" title="Delete video">
+                                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/></svg>
+                              </button>
+                            </form>
+                          {% endif %}
                         </div>
                       {% endfor %}
                     </div>
@@ -549,7 +573,21 @@
                           {% if video.embedUrl %}
                             <iframe src="{{ video.embedUrl }}" title="{{ video.title }}" loading="lazy" allow="encrypted-media; picture-in-picture; web-share" allowfullscreen></iframe>
                           {% else %}
-                            <img src="{{ video.thumbnail or '/image/fav-icon.png' }}" alt="{{ video.title }}" />
+                            <img src="{{ video.thumbnail or '/image/fav-icon.webp' }}" alt="{{ video.title }}" />
+                          {% endif %}
+                          {% if video.is_default %}
+                            <form method="post" action="{{ url_for('portal_delete_default_gallery_video') }}" class="image-delete-form" data-item-name="{{ video.title }}">
+                              <input type="hidden" name="gallery_video_url" value="{{ video.href }}" />
+                              <button class="icon-button icon-button--delete" type="submit" aria-label="Delete {{ video.title }}" title="Delete video">
+                                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/></svg>
+                              </button>
+                            </form>
+                          {% elif video.id is defined and video.id is not none %}
+                            <form method="post" action="{{ url_for('portal_news_events_video_delete', event_id=video.id) }}" class="image-delete-form" data-item-name="{{ video.title }}">
+                              <button class="icon-button icon-button--delete" type="submit" aria-label="Delete {{ video.title }}" title="Delete video">
+                                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/></svg>
+                              </button>
+                            </form>
                           {% endif %}
                         </div>
                       {% endfor %}
@@ -579,6 +617,26 @@
       const noteLightbox = document.getElementById('note-lightbox');
       const noteLightboxImage = document.getElementById('note-lightbox-image');
       const noteLightboxClose = document.getElementById('note-lightbox-close');
+
+      document.querySelectorAll('.image-delete-form').forEach((form) => {
+        form.addEventListener('submit', (event) => {
+          event.preventDefault();
+          Swal.fire({
+            title: 'Delete image?',
+            text: `${form.dataset.itemName || 'This image'} will be removed permanently.`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#4d2adf',
+            confirmButtonText: 'Yes, delete it',
+            cancelButtonText: 'Cancel',
+          }).then((result) => {
+            if (result.isConfirmed) {
+              form.submit();
+            }
+          });
+        });
+      });
 
       document.querySelectorAll('.note-delete-form').forEach((form) => {
         form.addEventListener('submit', (event) => {
@@ -649,6 +707,7 @@
       const notesNavItem = document.querySelector('[data-panel="notes"]');
       const tabButtons = document.querySelectorAll('.tabs .tab-button');
       const tabPanels = document.querySelectorAll('.tab-panel');
+      const imageTabs = document.querySelectorAll('.image-tab');
       const videoTabs = document.querySelectorAll('.video-tab');
       const pageHeading = document.getElementById('portal-page-heading');
 
@@ -782,12 +841,49 @@
         });
       });
 
+      document.querySelectorAll('.gallery-image-grid').forEach((grid) => {
+        let draggingImage = null;
+        grid.addEventListener('dragstart', (event) => {
+          draggingImage = event.target.closest('.media-card');
+          if (!draggingImage) return;
+          draggingImage.classList.add('dragging');
+          event.dataTransfer.effectAllowed = 'move';
+        });
+        grid.addEventListener('dragover', (event) => {
+          const target = event.target.closest('.media-card');
+          if (!draggingImage || !target || target === draggingImage) return;
+          event.preventDefault();
+          const rect = target.getBoundingClientRect();
+          grid.insertBefore(draggingImage, event.clientX < rect.left + rect.width / 2 ? target : target.nextElementSibling);
+        });
+        grid.addEventListener('drop', async (event) => {
+          if (!draggingImage) return;
+          event.preventDefault();
+          const imageUrls = Array.from(grid.querySelectorAll('.media-card[data-image-url]')).map((card) => card.dataset.imageUrl);
+          try {
+            await fetch('/portal/news-and-events/gallery-images/reorder', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              credentials: 'same-origin',
+              body: JSON.stringify({ image_urls: imageUrls }),
+            });
+          } catch (error) {
+            console.error('Failed to reorder gallery images', error);
+          }
+        });
+        grid.addEventListener('dragend', () => {
+          if (draggingImage) draggingImage.classList.remove('dragging');
+          draggingImage = null;
+        });
+      });
+
       const switchPanel = (selectedPanel) => {
         const normalizedPanel = selectedPanel === 'video' ? 'video-add' : selectedPanel;
         const paneMap = {
           add: 'tab-add',
           list: 'tab-list',
           image: 'tab-image-add',
+          'image-add': 'tab-image-add',
           'image-list': 'tab-image-list',
           notes: 'tab-note',
           video: 'tab-video-add',
@@ -805,6 +901,7 @@
           add: ['Add Card', 'Card List'],
           list: ['Add Card', 'Card List'],
           image: ['Add Image', 'Image List'],
+          'image-add': ['Add Image', 'Image List'],
           'image-list': ['Add Image', 'Image List'],
           video: ['Add Video', 'Add Facebook Video', 'Video List'],
           'video-add': ['Add Video', 'Add Facebook Video', 'Video List'],
@@ -817,6 +914,7 @@
           add: 'News & Events > Card',
           list: 'News & Events > Card',
           image: 'News & Events > Image Gallery',
+          'image-add': 'News & Events > Image Gallery',
           'image-list': 'News & Events > Image Gallery',
           notes: 'Notes',
           video: 'News & Events > Video Gallery',
@@ -835,8 +933,10 @@
         });
 
         const isVideoSection = currentPanel === 'video' || currentPanel === 'video-add' || currentPanel === 'video-list' || currentPanel === 'facebook-video' || currentPanel === 'facebook-video-add';
-        const isImageGallerySection = currentPanel === 'image' || currentPanel === 'image-list';
+        const isImageGallerySection = currentPanel === 'image' || currentPanel === 'image-add' || currentPanel === 'image-list';
         const showVideoSubTabs = isVideoSection;
+        const showImageSubTabs = isImageGallerySection;
+        const imageTabsContainer = document.querySelector('.image-tabs');
         const videoTabsContainer = document.querySelector('.video-tabs');
 
         tabButtons.forEach((tabButton) => {
@@ -858,6 +958,10 @@
           videoTabsContainer.style.display = showVideoSubTabs ? 'flex' : 'none';
         }
 
+        if (imageTabsContainer) {
+          imageTabsContainer.style.display = showImageSubTabs ? 'flex' : 'none';
+        }
+
         if (newsMainLink) {
           newsMainLink.classList.remove('active');
         }
@@ -875,6 +979,13 @@
           const isActive = targetPanel === currentPanel || (currentPanel === 'video-list' && targetPanel === 'video-list') || (currentPanel === 'video-add' && targetPanel === 'video-add') || (currentPanel === 'facebook-video-add' && targetPanel === 'facebook-video-add');
           tab.classList.toggle('active', isActive);
           tab.style.display = showVideoSubTabs ? 'inline-flex' : 'none';
+        });
+
+        imageTabs.forEach((tab) => {
+          const targetPanel = tab.dataset.imagePanel;
+          const isActive = targetPanel === currentPanel || (currentPanel === 'image' && targetPanel === 'image');
+          tab.classList.toggle('active', isActive);
+          tab.style.display = showImageSubTabs ? 'inline-flex' : 'none';
         });
 
         if (pageHeading) {
@@ -929,6 +1040,13 @@
         button.addEventListener('click', () => {
           const mode = button.dataset.videoPanel;
           const selectedKey = mode === 'video-add' ? 'video-add' : mode === 'facebook-video-add' ? 'facebook-video-add' : 'video-list';
+          switchPanel(selectedKey);
+        });
+      });
+
+      imageTabs.forEach((button) => {
+        button.addEventListener('click', () => {
+          const selectedKey = button.dataset.imagePanel === 'image-list' ? 'image-list' : 'image';
           switchPanel(selectedKey);
         });
       });

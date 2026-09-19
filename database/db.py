@@ -296,6 +296,30 @@ def init_db(db_path='database/hospital.db'):
         )
         '''
     )
+    conn.execute(
+        '''
+        CREATE TABLE IF NOT EXISTS hidden_gallery_images (
+            image_url TEXT PRIMARY KEY,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+        '''
+    )
+    conn.execute(
+        '''
+        CREATE TABLE IF NOT EXISTS gallery_image_order (
+            image_url TEXT PRIMARY KEY,
+            sort_order INTEGER NOT NULL DEFAULT 0
+        )
+        '''
+    )
+    conn.execute(
+        '''
+        CREATE TABLE IF NOT EXISTS hidden_gallery_videos (
+            video_url TEXT PRIMARY KEY,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+        '''
+    )
     site_note_columns = conn.execute('PRAGMA table_info(site_notes)').fetchall()
     if not any(column['name'] == 'display_days' for column in site_note_columns):
         conn.execute('ALTER TABLE site_notes ADD COLUMN display_days INTEGER DEFAULT 0')

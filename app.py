@@ -8,6 +8,7 @@ from flask import Flask, jsonify, render_template, request, redirect, session, u
 from flask_cors import CORS
 from werkzeug.security import check_password_hash, generate_password_hash
 from werkzeug.utils import secure_filename
+from PIL import Image, UnidentifiedImageError
 from dotenv import load_dotenv
 from database.db import get_connection, init_db, get_portal_user, deduplicate_doctors, deduplicate_departments, deduplicate_health_packages, get_health_packages
 from routes.appointments import appointments_bp
@@ -18,9 +19,14 @@ load_dotenv()
 app = Flask(__name__, static_folder='image', static_url_path='/image')
 app.config['JSON_SORT_KEYS'] = False
 app.config['SQLITE_DB_PATH'] = os.getenv('SQLITE_DB_PATH', 'database/hospital.db')
-app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'vinayak-hospital-portal-secret')
+app.config['SECRET_KEY'] = os.getenv('SECRET_KEY') or os.urandom(32).hex()
 
-CORS(app, resources={r"/api/*": {"origins": "*"}})
+allowed_origins = [
+    origin.strip()
+    for origin in os.getenv('CORS_ALLOWED_ORIGINS', 'http://localhost:5173, http://127.0.0.1:5173').split(',')
+    if origin.strip()
+]
+CORS(app, resources={r"/api/*": {"origins": allowed_origins}})
 
 init_db(app.config['SQLITE_DB_PATH'])
 
@@ -28,24 +34,24 @@ app.register_blueprint(appointments_bp, url_prefix='/api')
 app.register_blueprint(contacts_bp, url_prefix='/api')
 
 DOCTOR_IMAGE_BY_NAME = {
-    'usha shrestha': '/image/dr18.png',
-    'heempali dutta': '/image/dr1.png',
-    'shiva kumar shrestha': '/image/dr2.png',
-    'rajesh chaudhary': '/image/dr3.png',
-    'yam psd. dwa': '/image/dr4.png',
-    'manoj kumar sah': '/image/dr5.png',
-    'prof. dr. bidhan nidhi poudel': '/image/dr6.png',
-    'darshan kumar gurung': '/image/dr7.png',
-    'ram krishna rajbhandari': '/image/dr8.png',
-    'shuvash acharya': '/image/dr9.png',
-    'prabha gyawali': '/image/dr10.png',
-    'pralhad chalise': '/image/dr11.png',
-    'shamrant b. baniya': '/image/dr12.png',
-    'parmeshwar sah.': '/image/dr13.png',
-    'manoranjan dwa': '/image/dr14.png',
-    'manoj khatri': '/image/dr15.png',
-    'narayan bikram thapa': '/image/dr16.png',
-    'deepak sharma': '/image/dr17.png',
+    'usha shrestha': '/image/dr18.webp',
+    'heempali dutta': '/image/dr1.webp',
+    'shiva kumar shrestha': '/image/dr2.webp',
+    'rajesh chaudhary': '/image/dr3.webp',
+    'yam psd. dwa': '/image/dr4.webp',
+    'manoj kumar sah': '/image/dr5.webp',
+    'prof. dr. bidhan nidhi poudel': '/image/dr6.webp',
+    'darshan kumar gurung': '/image/dr7.webp',
+    'ram krishna rajbhandari': '/image/dr8.webp',
+    'shuvash acharya': '/image/dr9.webp',
+    'prabha gyawali': '/image/dr10.webp',
+    'pralhad chalise': '/image/dr11.webp',
+    'shamrant b. baniya': '/image/dr12.webp',
+    'parmeshwar sah.': '/image/dr13.webp',
+    'manoranjan dwa': '/image/dr14.webp',
+    'manoj khatri': '/image/dr15.webp',
+    'narayan bikram thapa': '/image/dr16.webp',
+    'deepak sharma': '/image/dr17.webp',
 }
 
 
@@ -61,6 +67,11 @@ def client_home():
         "status": "client_build_missing",
         "message": "The client site build is not available yet. Run 'npm run build' in the project root to generate dist/index.html."
     }), 404
+
+
+@app.get('/favicon.ico')
+def favicon():
+    return send_from_directory(os.path.join(app.root_path, 'public'), 'favicon.ico')
 
 
 @app.get('/api/health')
@@ -130,7 +141,7 @@ def portal_add_doctors():
             'specialty': doctor['specialty'],
             'experience': doctor['experience'],
             'bio': doctor['bio'],
-            'image_url': DOCTOR_IMAGE_BY_NAME.get(normalized_name, '/image/fav-icon.png'),
+            'image_url': DOCTOR_IMAGE_BY_NAME.get(normalized_name, '/image/fav-icon.webp'),
         })
 
     return render_template(
@@ -211,6 +222,60 @@ def portal_create_department():
         'INSERT INTO departments (name, description) VALUES (?, ?)',
         (name, description or None)
     )
+    conn.commit()
+    conn.close()
+    return redirect(url_for('portal_add_departments'))
+
+
+@app.get('/portal/add-departments/<int:department_id>/edit')
+def portal_edit_department(department_id):
+    if not session.get('logged_in'):
+        return redirect(url_for('portal_login_page'))
+
+    conn = get_connection(app.config['SQLITE_DB_PATH'])
+    department = conn.execute(
+        'SELECT id, name, description FROM departments WHERE id = ?',
+        (department_id,)
+    ).fetchone()
+    conn.close()
+
+    if not department:
+        return redirect(url_for('portal_add_departments'))
+
+    return render_template(
+        'portal_department_edit.html',
+        username=session.get('username', 'vinayak'),
+        department=dict(department),
+    )
+
+
+@app.post('/portal/add-departments/<int:department_id>/edit')
+def portal_update_department(department_id):
+    if not session.get('logged_in'):
+        return redirect(url_for('portal_login_page'))
+
+    name = (request.form.get('name') or '').strip()
+    description = (request.form.get('description') or '').strip()
+    if not name:
+        return redirect(url_for('portal_edit_department', department_id=department_id))
+
+    conn = get_connection(app.config['SQLITE_DB_PATH'])
+    conn.execute(
+        'UPDATE departments SET name = ?, description = ? WHERE id = ?',
+        (name, description or None, department_id)
+    )
+    conn.commit()
+    conn.close()
+    return redirect(url_for('portal_add_departments'))
+
+
+@app.post('/portal/add-departments/<int:department_id>/delete')
+def portal_delete_department(department_id):
+    if not session.get('logged_in'):
+        return redirect(url_for('portal_login_page'))
+
+    conn = get_connection(app.config['SQLITE_DB_PATH'])
+    conn.execute('DELETE FROM departments WHERE id = ?', (department_id,))
     conn.commit()
     conn.close()
     return redirect(url_for('portal_add_departments'))
@@ -378,38 +443,103 @@ BOARD_MEMBERS = [
         'id': 1,
         'name': 'Rajesh Sharma',
         'role': 'Chairperson',
+        'category': 'Leadership',
         'description': 'Guiding strategic growth, trust, and community-centered healthcare leadership.',
-        'image': '/image/bod2.png',
+        'image': '/image/bod2.webp',
     },
     {
         'id': 2,
         'name': 'Dr. Meera Joshi',
         'role': 'Medical Director',
+        'category': 'Clinical Leadership',
         'description': 'Leading clinical quality, care standards, and compassionate service delivery.',
-        'image': '/image/bod3.png',
+        'image': '/image/bod3.webp',
     },
     {
         'id': 3,
         'name': 'K.P. Lamichhane',
         'role': 'Executive Chairman',
+        'category': 'Leadership',
         'description': 'Steering hospital leadership, operational excellence, and strategic care delivery.',
-        'image': '/image/bod1.png',
+        'image': '/image/bod1.webp',
     },
     {
         'id': 4,
         'name': 'Sita Rai',
         'role': 'Community Outreach',
+        'category': 'Community Relations',
         'description': 'Building neighborhood trust, healthcare access, and long-term patient support.',
-        'image': '/image/bod4.png',
+        'image': '/image/bod4.webp',
     },
     {
         'id': 5,
         'name': 'Nabin Adhikari',
         'role': 'Governance Advisor',
+        'category': 'Governance',
         'description': 'Helping shape transparent leadership, policy direction, and institutional progress.',
-        'image': '/image/bod5.png',
+        'image': '/image/bod5.webp',
     },
 ]
+
+CATEGORIES = [
+    {'id': 1, 'name': 'Leadership'},
+    {'id': 2, 'name': 'Clinical Leadership'},
+    {'id': 3, 'name': 'Community Relations'},
+    {'id': 4, 'name': 'Governance'},
+]
+
+
+def _initialize_bod_storage():
+    conn = get_connection(app.config['SQLITE_DB_PATH'])
+    conn.execute(
+        '''
+        CREATE TABLE IF NOT EXISTS bod_categories (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT NOT NULL UNIQUE
+        )
+        '''
+    )
+    conn.execute(
+        '''
+        CREATE TABLE IF NOT EXISTS board_members (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT NOT NULL,
+            role TEXT NOT NULL,
+            category TEXT,
+            description TEXT,
+            image TEXT,
+            sort_order INTEGER NOT NULL DEFAULT 0
+        )
+        '''
+    )
+    if conn.execute('SELECT COUNT(*) AS count FROM bod_categories').fetchone()['count'] == 0:
+        conn.executemany('INSERT INTO bod_categories (id, name) VALUES (?, ?)', [(item['id'], item['name']) for item in CATEGORIES])
+    if conn.execute('SELECT COUNT(*) AS count FROM board_members').fetchone()['count'] == 0:
+        conn.executemany(
+            'INSERT INTO board_members (id, name, role, category, description, image, sort_order) VALUES (?, ?, ?, ?, ?, ?, ?)',
+            [(item['id'], item['name'], item['role'], item.get('category'), item.get('description'), item.get('image'), index) for index, item in enumerate(BOARD_MEMBERS, start=1)]
+        )
+    conn.commit()
+    conn.close()
+
+
+def _get_bod_members():
+    conn = get_connection(app.config['SQLITE_DB_PATH'])
+    members = conn.execute(
+        'SELECT id, name, role, category, description, image FROM board_members ORDER BY sort_order ASC, id ASC'
+    ).fetchall()
+    conn.close()
+    return [dict(member) for member in members]
+
+
+def _get_bod_categories():
+    conn = get_connection(app.config['SQLITE_DB_PATH'])
+    categories = conn.execute('SELECT id, name FROM bod_categories ORDER BY id ASC').fetchall()
+    conn.close()
+    return [dict(category) for category in categories]
+
+
+_initialize_bod_storage()
 
 
 DEFAULT_NEWS_EVENTS = [
@@ -440,11 +570,11 @@ DEFAULT_NEWS_EVENTS = [
 ]
 
 DEFAULT_NEWS_EVENT_IMAGES = [
-    {'src': '/image/bod3.png', 'alt': 'Patient care space', 'header': 'Patient care space'},
-    {'src': '/image/bod2.png', 'alt': 'Hospital facilities', 'header': 'Hospital facilities'},
-    {'src': '/image/bod4.png', 'alt': 'Modern treatment rooms', 'header': 'Modern treatment rooms'},
-    {'src': '/image/bod5.png', 'alt': 'Hospital reception', 'header': 'Hospital reception'},
-    {'src': '/image/Interior Exploration (10).png', 'alt': 'Hospital interior', 'header': 'Hospital interior'},
+    {'src': '/image/bod3.webp', 'alt': 'Patient care space', 'header': 'Patient care space'},
+    {'src': '/image/bod2.webp', 'alt': 'Hospital facilities', 'header': 'Hospital facilities'},
+    {'src': '/image/bod4.webp', 'alt': 'Modern treatment rooms', 'header': 'Modern treatment rooms'},
+    {'src': '/image/bod5.webp', 'alt': 'Hospital reception', 'header': 'Hospital reception'},
+    {'src': '/image/Interior Exploration (10).webp', 'alt': 'Hospital interior', 'header': 'Hospital interior'},
 ]
 
 DEFAULT_NEWS_EVENT_VIDEOS = [
@@ -490,29 +620,75 @@ def _deduplicate_video_entries(items):
     return unique
 
 
+def _get_ordered_gallery_images(conn):
+    hidden_urls = {row['image_url'] for row in conn.execute('SELECT image_url FROM hidden_gallery_images').fetchall()}
+    events = conn.execute(
+        '''
+        SELECT id, title, image_url, gallery_header
+        FROM news_events
+        WHERE image_url IS NOT NULL AND image_url != ''
+        ORDER BY COALESCE(sort_order, 999999), created_at DESC, id DESC
+        '''
+    ).fetchall()
+    candidates = [
+        {**image, 'is_default': True}
+        for image in DEFAULT_NEWS_EVENT_IMAGES
+        if image['src'] not in hidden_urls
+    ]
+    candidates.extend(
+        {
+            'id': event['id'],
+            'is_default': False,
+            'src': event['image_url'],
+            'alt': event['gallery_header'] or event['title'] or 'News and event image',
+            'header': event['gallery_header'] or event['title'] or 'News and event image',
+        }
+        for event in events
+    )
+    order_rows = conn.execute('SELECT image_url, sort_order FROM gallery_image_order').fetchall()
+    order_map = {row['image_url']: row['sort_order'] for row in order_rows}
+    next_order = max(order_map.values(), default=0) + 1
+    for image in candidates:
+        if image['src'] not in order_map:
+            order_map[image['src']] = next_order
+            conn.execute(
+                'INSERT INTO gallery_image_order (image_url, sort_order) VALUES (?, ?)',
+                (image['src'], next_order),
+            )
+            next_order += 1
+    conn.commit()
+    return sorted(candidates, key=lambda image: order_map[image['src']])
+
+
 def _news_event_upload_dir():
     folder = os.path.join(app.root_path, 'image', 'news_events')
     os.makedirs(folder, exist_ok=True)
     return folder
 
 
-def _save_news_event_image(file_storage):
+def _save_uploaded_webp(file_storage, folder, prefix=''):
     if not file_storage or not file_storage.filename:
         return None
 
-    filename = secure_filename(file_storage.filename)
-    if not filename:
+    os.makedirs(folder, exist_ok=True)
+    saved_name = f"{prefix}{uuid.uuid4().hex}.webp"
+    save_path = os.path.join(folder, saved_name)
+
+    try:
+        file_storage.stream.seek(0)
+        with Image.open(file_storage.stream) as source:
+            image = source.convert('RGBA' if 'A' in source.getbands() else 'RGB')
+            image.save(save_path, 'WEBP', quality=82, method=6)
+    except (UnidentifiedImageError, OSError, ValueError):
+        if os.path.exists(save_path):
+            os.remove(save_path)
         return None
 
-    ext = os.path.splitext(filename)[1].lower()
-    allowed_exts = {'.jpg', '.jpeg', '.png', '.webp'}
-    if ext not in allowed_exts:
-        return None
+    return f"/image/{os.path.basename(folder)}/{saved_name}"
 
-    saved_name = f"{uuid.uuid4().hex}{ext}"
-    save_path = os.path.join(_news_event_upload_dir(), saved_name)
-    file_storage.save(save_path)
-    return f"/image/news_events/{saved_name}"
+
+def _save_news_event_image(file_storage):
+    return _save_uploaded_webp(file_storage, _news_event_upload_dir(), '')
 
 
 def _save_news_event_video(file_storage):
@@ -551,64 +727,17 @@ def _site_notes_upload_dir():
 
 
 def _save_site_note_image(file_storage):
-    if not file_storage or not file_storage.filename:
-        return None
-
-    filename = secure_filename(file_storage.filename)
-    if not filename:
-        return None
-
-    ext = os.path.splitext(filename)[1].lower()
-    allowed_exts = {'.jpg', '.jpeg', '.png', '.webp'}
-    if ext not in allowed_exts:
-        return None
-
-    saved_name = f"site-note-{uuid.uuid4().hex}{ext}"
-    save_path = os.path.join(_site_notes_upload_dir(), saved_name)
-    file_storage.save(save_path)
-    return f"/image/notes/{saved_name}"
+    return _save_uploaded_webp(file_storage, _site_notes_upload_dir(), 'site-note-')
 
 
 def _save_bod_image(file_storage):
-    if not file_storage or not file_storage.filename:
-        return None
-
-    filename = secure_filename(file_storage.filename)
-    if not filename:
-        return None
-
-    ext = os.path.splitext(filename)[1].lower()
-    allowed_exts = {'.jpg', '.jpeg', '.png', '.webp'}
-    if ext not in allowed_exts:
-        return None
-
     folder = os.path.join(app.root_path, 'image', 'bod')
-    os.makedirs(folder, exist_ok=True)
-    saved_name = f"bod-{uuid.uuid4().hex}{ext}"
-    save_path = os.path.join(folder, saved_name)
-    file_storage.save(save_path)
-    return f"/image/bod/{saved_name}"
+    return _save_uploaded_webp(file_storage, folder, 'bod-')
 
 
 def _save_doctor_image(file_storage):
-    if not file_storage or not file_storage.filename:
-        return None
-
-    filename = secure_filename(file_storage.filename)
-    if not filename:
-        return None
-
-    ext = os.path.splitext(filename)[1].lower()
-    allowed_exts = {'.jpg', '.jpeg', '.png', '.webp'}
-    if ext not in allowed_exts:
-        return None
-
     folder = os.path.join(app.root_path, 'image', 'doctors')
-    os.makedirs(folder, exist_ok=True)
-    saved_name = f"doctor-{uuid.uuid4().hex}{ext}"
-    save_path = os.path.join(folder, saved_name)
-    file_storage.save(save_path)
-    return f"/image/doctors/{saved_name}"
+    return _save_uploaded_webp(file_storage, folder, 'doctor-')
 
 
 def _normalize_facebook_embed_url(raw_url):
@@ -698,23 +827,16 @@ def _render_news_events_page(initial_panel='add'):
         ORDER BY COALESCE(sort_order, 999999), created_at DESC
         '''
     ).fetchall()
-    conn.close()
-
     db_events = [dict(row) for row in items]
     for item in db_events:
         item['event_date'] = _format_event_date_for_portal(item.get('event_date'))
 
-    gallery_images = [
-        {
-            'src': item['image_url'],
-            'alt': item.get('gallery_header') or item['title'] or 'News and event image',
-            'header': item.get('gallery_header') or item['title'] or 'News and event image',
-        }
-        for item in db_events if item.get('image_url')
-    ]
+    gallery_images = _get_ordered_gallery_images(conn)
+    conn.close()
     gallery_videos = [
         {
             'id': item.get('id'),
+            'is_default': False,
             'title': item['title'] or 'News and event video',
             'href': item['video_url'],
             'embedUrl': _normalize_facebook_embed_url(item['video_url']) if item['video_url'] and ('facebook.com/' in item['video_url'] or 'fb.watch/' in item['video_url']) else item['video_url'],
@@ -722,7 +844,15 @@ def _render_news_events_page(initial_panel='add'):
         }
         for item in db_events if item.get('video_url')
     ]
-    deduped_gallery_videos = _deduplicate_video_entries(DEFAULT_NEWS_EVENT_VIDEOS + gallery_videos)
+    gallery_state_conn = get_connection(app.config['SQLITE_DB_PATH'])
+    hidden_gallery_video_urls = {row['video_url'] for row in gallery_state_conn.execute('SELECT video_url FROM hidden_gallery_videos').fetchall()}
+    gallery_state_conn.close()
+    default_gallery_videos = [
+        {**video, 'is_default': True}
+        for video in DEFAULT_NEWS_EVENT_VIDEOS
+        if video['href'] not in hidden_gallery_video_urls
+    ]
+    deduped_gallery_videos = _deduplicate_video_entries(default_gallery_videos + gallery_videos)
 
     uploaded_gallery_videos = [
         video for video in deduped_gallery_videos if video['href'] and not ('facebook.com/' in video['href'] or 'fb.watch/' in video['href'])
@@ -742,7 +872,7 @@ def _render_news_events_page(initial_panel='add'):
     ]
 
     portal_events = db_events
-    portal_gallery_images = DEFAULT_NEWS_EVENT_IMAGES + gallery_images
+    portal_gallery_images = gallery_images
     portal_gallery_videos = deduped_gallery_videos
 
     conn2 = get_connection(app.config['SQLITE_DB_PATH'])
@@ -906,13 +1036,96 @@ def portal_add_bod():
     if not session.get('logged_in'):
         return redirect(url_for('portal_login_page'))
 
+    _initialize_bod_storage()
     # Render a server-side BOD page to avoid cross-port redirects during development.
     # This keeps the sidebar link working even when the SPA dev server is not used.
     return render_template(
         'portal_bod.html',
         username=session.get('username', 'vinayak'),
-        board_members=BOARD_MEMBERS,
+        board_members=_get_bod_members(),
+        categories=_get_bod_categories(),
+        active_panel=request.args.get('panel', 'add'),
+        category_open=request.args.get('category') == '1',
+        added_member_name=session.pop('bod_added_name', None),
     )
+
+
+@app.post('/portal/add-bod')
+def portal_create_bod_member():
+    if not session.get('logged_in'):
+        return redirect(url_for('portal_login_page'))
+
+    _initialize_bod_storage()
+    name = (request.form.get('name') or '').strip()
+    role = (request.form.get('role') or '').strip()
+    category = (request.form.get('category') or '').strip()
+    description = (request.form.get('description') or '').strip()
+    image = _save_bod_image(request.files.get('image')) or '/image/fav-icon.webp'
+
+    if not name or not role:
+        return redirect(url_for('portal_add_bod'))
+
+    conn = get_connection(app.config['SQLITE_DB_PATH'])
+    next_order = conn.execute('SELECT COALESCE(MAX(sort_order), 0) + 1 AS next_order FROM board_members').fetchone()['next_order']
+    conn.execute(
+        'INSERT INTO board_members (name, role, category, description, image, sort_order) VALUES (?, ?, ?, ?, ?, ?)',
+        (name, role, category, description, image, next_order)
+    )
+    conn.commit()
+    conn.close()
+    session['bod_added_name'] = name
+    return redirect(url_for('portal_add_bod', panel='list'))
+
+
+@app.post('/portal/add-bod/categories')
+def portal_create_bod_category():
+    if not session.get('logged_in'):
+        return redirect(url_for('portal_login_page'))
+
+    _initialize_bod_storage()
+    name = (request.form.get('name') or '').strip()
+    if name:
+        conn = get_connection(app.config['SQLITE_DB_PATH'])
+        exists = conn.execute('SELECT 1 FROM bod_categories WHERE LOWER(name) = LOWER(?)', (name,)).fetchone()
+        if not exists:
+            conn.execute('INSERT INTO bod_categories (name) VALUES (?)', (name,))
+            conn.commit()
+        conn.close()
+    return redirect(url_for('portal_add_bod', category='1'))
+
+
+@app.post('/portal/add-bod/categories/<int:category_id>/edit')
+def portal_update_bod_category(category_id):
+    if not session.get('logged_in'):
+        return redirect(url_for('portal_login_page'))
+
+    _initialize_bod_storage()
+    name = (request.form.get('name') or '').strip()
+    conn = get_connection(app.config['SQLITE_DB_PATH'])
+    category = conn.execute('SELECT name FROM bod_categories WHERE id = ?', (category_id,)).fetchone()
+    duplicate = conn.execute('SELECT 1 FROM bod_categories WHERE id != ? AND LOWER(name) = LOWER(?)', (category_id, name)).fetchone() if name else True
+    if category and name and not duplicate:
+        conn.execute('UPDATE bod_categories SET name = ? WHERE id = ?', (name, category_id))
+        conn.execute('UPDATE board_members SET category = ? WHERE category = ?', (name, category['name']))
+        conn.commit()
+    conn.close()
+    return redirect(url_for('portal_add_bod', category='1'))
+
+
+@app.post('/portal/add-bod/categories/<int:category_id>/delete')
+def portal_delete_bod_category(category_id):
+    if not session.get('logged_in'):
+        return redirect(url_for('portal_login_page'))
+
+    _initialize_bod_storage()
+    conn = get_connection(app.config['SQLITE_DB_PATH'])
+    category = conn.execute('SELECT name FROM bod_categories WHERE id = ?', (category_id,)).fetchone()
+    if category:
+        conn.execute('DELETE FROM bod_categories WHERE id = ?', (category_id,))
+        conn.execute('UPDATE board_members SET category = NULL WHERE category = ?', (category['name'],))
+        conn.commit()
+    conn.close()
+    return redirect(url_for('portal_add_bod', category='1'))
 
 
 @app.get('/portal/add-bod/<int:member_id>/edit')
@@ -920,7 +1133,11 @@ def portal_edit_bod_member(member_id):
     if not session.get('logged_in'):
         return redirect(url_for('portal_login_page'))
 
-    member = next((item for item in BOARD_MEMBERS if item.get('id') == member_id), None)
+    _initialize_bod_storage()
+    conn = get_connection(app.config['SQLITE_DB_PATH'])
+    member_row = conn.execute('SELECT id, name, role, category, description, image FROM board_members WHERE id = ?', (member_id,)).fetchone()
+    conn.close()
+    member = dict(member_row) if member_row else None
     if not member:
         return redirect(url_for('portal_add_bod'))
 
@@ -928,6 +1145,7 @@ def portal_edit_bod_member(member_id):
         'portal_bod_edit.html',
         username=session.get('username', 'vinayak'),
         member=member,
+        categories=_get_bod_categories(),
     )
 
 
@@ -936,8 +1154,10 @@ def portal_update_bod_member(member_id):
     if not session.get('logged_in'):
         return redirect(url_for('portal_login_page'))
 
+    _initialize_bod_storage()
     name = (request.form.get('name') or '').strip()
     role = (request.form.get('role') or '').strip()
+    category = (request.form.get('category') or '').strip()
     description = (request.form.get('description') or '').strip()
     uploaded_file = request.files.get('image')
     fallback_image = (request.form.get('image') or '').strip()
@@ -945,22 +1165,28 @@ def portal_update_bod_member(member_id):
     if not name or not role:
         return redirect(url_for('portal_edit_bod_member', member_id=member_id))
 
-    member = next((item for item in BOARD_MEMBERS if item.get('id') == member_id), None)
+    conn = get_connection(app.config['SQLITE_DB_PATH'])
+    member = conn.execute('SELECT id, name, role, category, description, image FROM board_members WHERE id = ?', (member_id,)).fetchone()
     if not member:
+        conn.close()
         return redirect(url_for('portal_add_bod'))
-
-    member['name'] = name
-    member['role'] = role
-    member['description'] = description
 
     if uploaded_file and uploaded_file.filename:
         saved_image = _save_bod_image(uploaded_file)
-        if saved_image:
-            member['image'] = saved_image
+        image = saved_image or member['image']
     elif fallback_image:
-        member['image'] = fallback_image
+        image = fallback_image
+    else:
+        image = member['image']
 
-    return redirect(url_for('portal_add_bod'))
+    conn.execute(
+        'UPDATE board_members SET name = ?, role = ?, category = ?, description = ?, image = ? WHERE id = ?',
+        (name, role, category, description, image, member_id)
+    )
+    conn.commit()
+    conn.close()
+
+    return redirect(url_for('portal_add_bod', panel='list'))
 
 
 @app.post('/portal/add-bod/<int:member_id>/delete')
@@ -968,12 +1194,13 @@ def portal_delete_bod_member(member_id):
     if not session.get('logged_in'):
         return redirect(url_for('portal_login_page'))
 
-    global BOARD_MEMBERS
-    BOARD_MEMBERS = [member for member in BOARD_MEMBERS if member.get('id') != member_id]
-    for index, member in enumerate(BOARD_MEMBERS, start=1):
-        member['id'] = index
+    _initialize_bod_storage()
+    conn = get_connection(app.config['SQLITE_DB_PATH'])
+    conn.execute('DELETE FROM board_members WHERE id = ?', (member_id,))
+    conn.commit()
+    conn.close()
 
-    return redirect(url_for('portal_add_bod'))
+    return redirect(url_for('portal_add_bod', panel='list'))
 
 
 @app.post('/portal/add-bod/reorder')
@@ -981,13 +1208,15 @@ def portal_reorder_bod():
     if not session.get('logged_in'):
         return jsonify({'error': 'Unauthorized'}), 401
 
+    _initialize_bod_storage()
     data = request.get_json(silent=True) or {}
     member_ids = data.get('member_ids') or []
     if not isinstance(member_ids, list):
         return jsonify({'error': 'Invalid payload'}), 400
 
     seen_ids = set()
-    id_map = {member['id']: member for member in BOARD_MEMBERS if 'id' in member}
+    conn = get_connection(app.config['SQLITE_DB_PATH'])
+    id_map = {member['id']: member for member in _get_bod_members() if 'id' in member}
     reordered = []
     for raw_id in member_ids:
         try:
@@ -998,14 +1227,43 @@ def portal_reorder_bod():
             reordered.append(id_map[member_id])
             seen_ids.add(member_id)
 
-    for member in BOARD_MEMBERS:
+    for member in _get_bod_members():
         member_id = member.get('id')
         if member_id is not None and member_id not in seen_ids:
             reordered.append(member)
             seen_ids.add(member_id)
 
-    BOARD_MEMBERS[:] = reordered
+    for index, member in enumerate(reordered, start=1):
+        conn.execute('UPDATE board_members SET sort_order = ? WHERE id = ?', (index, member['id']))
+    conn.commit()
+    conn.close()
     return jsonify({'status': 'ok'})
+
+
+@app.post('/portal/news-and-event/gallery-images/reorder')
+@app.post('/portal/news-and-events/gallery-images/reorder')
+def portal_news_events_gallery_images_reorder():
+    if not session.get('logged_in'):
+        return jsonify({'ok': False, 'error': 'not_authenticated'}), 401
+
+    image_urls = (request.get_json(silent=True) or {}).get('image_urls')
+    if not isinstance(image_urls, list) or not image_urls:
+        return jsonify({'ok': False, 'error': 'invalid_payload'}), 400
+
+    conn = get_connection(app.config['SQLITE_DB_PATH'])
+    current_images = _get_ordered_gallery_images(conn)
+    valid_urls = {image['src'] for image in current_images}
+    ordered_urls = []
+    for image_url in image_urls:
+        cleaned = str(image_url or '').strip()
+        if cleaned in valid_urls and cleaned not in ordered_urls:
+            ordered_urls.append(cleaned)
+    ordered_urls.extend(image['src'] for image in current_images if image['src'] not in ordered_urls)
+    for index, image_url in enumerate(ordered_urls, start=1):
+        conn.execute('UPDATE gallery_image_order SET sort_order = ? WHERE image_url = ?', (index, image_url))
+    conn.commit()
+    conn.close()
+    return jsonify({'ok': True, 'image_urls': ordered_urls})
 
 
 @app.post('/portal/news-and-event/videos/reorder')
@@ -1279,7 +1537,68 @@ def portal_news_events_delete(event_id):
         if os.path.exists(full_path):
             os.remove(full_path)
     conn.execute('DELETE FROM news_events WHERE id = ?', (event_id,))
+    if row and row['image_url']:
+        conn.execute('DELETE FROM gallery_image_order WHERE image_url = ?', (row['image_url'],))
     conn.commit()
+    conn.close()
+    return redirect(url_for('portal_news_events'))
+
+
+@app.post('/portal/news-and-event/gallery-image/delete')
+@app.post('/portal/news-and-events/gallery-image/delete')
+def portal_delete_default_gallery_image():
+    if not session.get('logged_in'):
+        return redirect(url_for('portal_login_page'))
+
+    image_url = (request.form.get('image_url') or '').strip()
+    allowed_urls = {image['src'] for image in DEFAULT_NEWS_EVENT_IMAGES}
+    if image_url not in allowed_urls:
+        return redirect(url_for('portal_news_events'))
+
+    conn = get_connection(app.config['SQLITE_DB_PATH'])
+    conn.execute('INSERT OR IGNORE INTO hidden_gallery_images (image_url) VALUES (?)', (image_url,))
+    conn.commit()
+    conn.close()
+    return redirect(url_for('portal_news_events'))
+
+
+@app.post('/portal/news-and-event/gallery-video/delete')
+@app.post('/portal/news-and-events/gallery-video/delete')
+def portal_delete_default_gallery_video():
+    if not session.get('logged_in'):
+        return redirect(url_for('portal_login_page'))
+
+    video_url = (request.form.get('gallery_video_url') or '').strip()
+    allowed_urls = {video['href'] for video in DEFAULT_NEWS_EVENT_VIDEOS}
+    if video_url not in allowed_urls:
+        return redirect(url_for('portal_news_events'))
+
+    conn = get_connection(app.config['SQLITE_DB_PATH'])
+    conn.execute('INSERT OR IGNORE INTO hidden_gallery_videos (video_url) VALUES (?)', (video_url,))
+    conn.commit()
+    conn.close()
+    return redirect(url_for('portal_news_events'))
+
+
+@app.post('/portal/news-and-event/<int:event_id>/video-delete')
+@app.post('/portal/news-and-events/<int:event_id>/video-delete')
+def portal_news_events_video_delete(event_id):
+    if not session.get('logged_in'):
+        return redirect(url_for('portal_login_page'))
+
+    conn = get_connection(app.config['SQLITE_DB_PATH'])
+    row = conn.execute('SELECT image_url, video_url FROM news_events WHERE id = ?', (event_id,)).fetchone()
+    if row and row['video_url']:
+        video_url = row['video_url']
+        if video_url.startswith('/image/'):
+            full_path = os.path.join(app.root_path, 'image', video_url.replace('/image/', '', 1))
+            if os.path.exists(full_path):
+                os.remove(full_path)
+        if row['image_url']:
+            conn.execute('UPDATE news_events SET video_url = NULL WHERE id = ?', (event_id,))
+        else:
+            conn.execute('DELETE FROM news_events WHERE id = ?', (event_id,))
+        conn.commit()
     conn.close()
     return redirect(url_for('portal_news_events'))
 
@@ -1315,6 +1634,21 @@ def api_site_settings():
     return jsonify(settings)
 
 
+@app.get('/api/gallery-visibility')
+def api_gallery_visibility():
+    conn = get_connection(app.config['SQLITE_DB_PATH'])
+    hidden_images = [row['image_url'] for row in conn.execute('SELECT image_url FROM hidden_gallery_images').fetchall()]
+    hidden_videos = [row['video_url'] for row in conn.execute('SELECT video_url FROM hidden_gallery_videos').fetchall()]
+    conn.close()
+    return jsonify({'hidden_images': hidden_images, 'hidden_videos': hidden_videos})
+
+
+@app.get('/api/board-members')
+def api_board_members():
+    _initialize_bod_storage()
+    return jsonify({'board_members': _get_bod_members()})
+
+
 @app.get('/api/news-events')
 def api_news_events():
     conn = get_connection(app.config['SQLITE_DB_PATH'])
@@ -1324,13 +1658,14 @@ def api_news_events():
         FROM news_events ORDER BY COALESCE(sort_order, 999999), created_at DESC
         '''
     ).fetchall()
+    gallery_images = _get_ordered_gallery_images(conn)
     conn.close()
     payload = []
     for row in items:
         item = dict(row)
         item['gallery_header'] = item.get('gallery_header') or item.get('title') or None
         payload.append(item)
-    return jsonify({"news_events": payload})
+    return jsonify({"news_events": payload, "gallery_images": gallery_images})
 
 
 @app.post('/portal/news-and-event/<int:event_id>/status')
@@ -1457,7 +1792,7 @@ def portal_edit_doctor(doctor_id):
         return redirect(url_for('portal_add_doctors'))
 
     doctor_data = dict(doctor)
-    doctor_data['image_url'] = DOCTOR_IMAGE_BY_NAME.get((doctor_data['name'] or '').strip().lower(), '/image/fav-icon.png')
+    doctor_data['image_url'] = DOCTOR_IMAGE_BY_NAME.get((doctor_data['name'] or '').strip().lower(), '/image/fav-icon.webp')
 
     return render_template(
         'portal_doctor_edit.html',

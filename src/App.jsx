@@ -1,12 +1,13 @@
-import { useEffect, useRef, useState, Fragment } from 'react';
+import { Suspense, lazy, useEffect, useRef, useState, Fragment } from 'react';
 import gsap from 'gsap';
-import DoctorProfile from './components/DoctorProfile';
-import DoctorsPage from './components/DoctorsPage';
-import HealthPackagesPage from './components/HealthPackagesPage';
-import NewsEventsPage from './components/NewsEventsPage';
-import SuggestionPage from './components/SuggestionPage';
-import BoardPage from './components/BoardPage';
-import AboutPage from './components/AboutPage';
+import SimpleInfoPage from './components/SimpleInfoPage';
+const DoctorProfile = lazy(() => import('./components/DoctorProfile'));
+const DoctorsPage = lazy(() => import('./components/DoctorsPage'));
+const HealthPackagesPage = lazy(() => import('./components/HealthPackagesPage'));
+const NewsEventsPage = lazy(() => import('./components/NewsEventsPage'));
+const SuggestionPage = lazy(() => import('./components/SuggestionPage'));
+const BoardPage = lazy(() => import('./components/BoardPage'));
+const AboutPage = lazy(() => import('./components/AboutPage'));
 import { initAppSetup } from './libs/appSetup';
 import {
   Activity,
@@ -31,52 +32,61 @@ import {
   X,
 } from 'lucide-react';
 import footerLogo from '../image/footer_logo.svg';
-import footerOverlay from '../image/footer_overlay.jpg';
-import bannerImage from '../image/Banner.png';
-import bannerMobileImage from '../image/banner_mobile.png';
-import bannerImage2 from '../image/Banner_1.png';
-import banner1Mobile from '../image/banner_1_mobile.png';
+import footerOverlay from '../image/footer_overlay.webp';
+import bannerImage from '../image/Banner.webp';
+import bannerMobileImage from '../image/banner_mobile.webp';
+import bannerImage2 from '../image/Banner_1.webp';
+import banner1Mobile from '../image/banner_1_mobile.webp';
 import headerLogo from '../image/header_logo.svg';
+
+function normalizeFacebookVideoUrl(rawUrl) {
+  const url = String(rawUrl || '').trim();
+  if (!url || (!url.includes('facebook.com/') && !url.includes('fb.watch/'))) {
+    return url;
+  }
+
+  return `https://www.facebook.com/plugins/video.php?href=${encodeURIComponent(url)}&show_text=false&width=560`;
+}
 import logoAnimation from '../image/logo_animation.gif';
-import boardMember1 from '../image/bod1.png';
-import boardMember2 from '../image/bod2.png';
-import boardMember3 from '../image/bod3.png';
-import boardMember4 from '../image/bod4.png';
-import boardMember5 from '../image/bod5.png';
-import doctorImage from '../image/dr4.png';
+import boardMember1 from '../image/bod1.webp';
+import boardMember2 from '../image/bod2.webp';
+import boardMember3 from '../image/bod3.webp';
+import boardMember4 from '../image/bod4.webp';
+import boardMember5 from '../image/bod5.webp';
+import doctorImage from '../image/dr4.webp';
 // doctorFallback removed; use existing `doctor1Image` as fallback
-import doctor1Image from '../image/dr1.png';
-import doctor2Image from '../image/dr2.png';
-import doctor3Image from '../image/dr3.png';
-import doctor4Image from '../image/dr4.png';
-import doctor5Image from '../image/dr5.png';
-import doctor6Image from '../image/dr6.png';
-import doctor7Image from '../image/dr7.png';
-import doctor8Image from '../image/dr8.png';
-import doctor9Image from '../image/dr9.png';
-import doctor10Image from '../image/dr10.png';
-import doctor11Image from '../image/dr11.png';
-import doctor12Image from '../image/dr12.png';
-import doctor13Image from '../image/dr13.png';
-import doctor14Image from '../image/dr14.png';
-import doctor15Image from '../image/dr15.png';
-import doctor16Image from '../image/dr16.png';
-import doctor17Image from '../image/dr17.png';
-import doctor18Image from '../image/dr18.png';
-import whyToChooseUsImage1 from '../image/whytochooseus1.jpg';
-import whyToChooseUsImage from '../image/whytochooseus.jpg';
-import whyToChooseUsImage2 from '../image/whytochooseus2.jpg';
-import whatsappQrImage from '../image/whatsapp_qr.jpg';
-import ourService1Image from '../image/ourservice1.jpg';
-import ourService2Image from '../image/ourservice2.jpg';
-import ourService3Image from '../image/ourservice3.jpg';
-import ourService4Image from '../image/ourservice4.png';
-import ourService5Image from '../image/ourservice5.png';
-import ourService6Image from '../image/ourservice6.png';
-import galleryImage1 from '../image/Interior Exploration (10).png';
-import whatsappProfile from '../image/whatsapp_profile.jpg';
-import englishFlagImg from '../image/english_flag.jpg';
-import nepaliFlagImg from '../image/nepali_flag.png';
+import doctor1Image from '../image/dr1.webp';
+import doctor2Image from '../image/dr2.webp';
+import doctor3Image from '../image/dr3.webp';
+import doctor4Image from '../image/dr4.webp';
+import doctor5Image from '../image/dr5.webp';
+import doctor6Image from '../image/dr6.webp';
+import doctor7Image from '../image/dr7.webp';
+import doctor8Image from '../image/dr8.webp';
+import doctor9Image from '../image/dr9.webp';
+import doctor10Image from '../image/dr10.webp';
+import doctor11Image from '../image/dr11.webp';
+import doctor12Image from '../image/dr12.webp';
+import doctor13Image from '../image/dr13.webp';
+import doctor14Image from '../image/dr14.webp';
+import doctor15Image from '../image/dr15.webp';
+import doctor16Image from '../image/dr16.webp';
+import doctor17Image from '../image/dr17.webp';
+import doctor18Image from '../image/dr18.webp';
+import whyToChooseUsImage1 from '../image/whytochooseus1.webp';
+import whyToChooseUsImage from '../image/whytochooseus.webp';
+import whyToChooseUsImage2 from '../image/whytochooseus2.webp';
+import whatsappQrImage from '../image/whatsapp_qr.webp';
+import ourService1Image from '../image/ourservice1.webp';
+import ourService2Image from '../image/ourservice2.webp';
+import ourService3Image from '../image/ourservice3.webp';
+import ourService4Image from '../image/ourservice4.webp';
+import ourService5Image from '../image/ourservice5.webp';
+import ourService6Image from '../image/ourservice6.webp';
+import galleryImage1 from '../image/Interior Exploration (10).webp';
+import whatsappProfile from '../image/whatsapp_profile.webp';
+import englishFlagImg from '../image/english_flag.webp';
+import nepaliFlagImg from '../image/nepali_flag.webp';
 
 const englishFlag = englishFlagImg;
 const nepaliFlag = nepaliFlagImg;
@@ -219,7 +229,7 @@ const translations = {
       },
       { label: 'LAB REPORT', href: 'https://labreport.merodoctor.com/212' },
       { label: 'SUGGESTION', href: '#suggestion' },
-      { label: 'NEWS AND EVENTS', href: '#testimonials' },
+      { label: 'NEWS AND EVENTS', href: '#news-events' },
     ],
     topbar: {
       website: 'Website',
@@ -230,11 +240,11 @@ const translations = {
       phoneNumbers: ['977-14983152', '01-4981071', '9851013439'],
     },
     hero: {
-      eyebrow: 'Compassionate care, every step of the way',
-      title: 'Trusted maternity, family, and emergency care for every stage of life.',
-      text: '',
+      eyebrow: 'YOUR HEALTH, OUR PRIORITY',
+      title: 'Trusted healthcare for every stage of life.',
+      text: 'Modern support for every family journey and birth experience.',
       titleAlt: 'Modern support for every family journey and birth experience.',
-      textAlt: '',
+      textAlt: 'Compassionate care, modern expertise, and trusted support.',
       contact: 'Contact Us',
       services: 'View Services',
       emergency: 'Emergency',
@@ -247,12 +257,14 @@ const translations = {
       panelBadge: 'Care you can trust',
       panelItems: ['Safe maternity care', 'Modern diagnostic support', 'Family-first consultations'],
       marqueeItems: [
+        '977-14983152, 01-4981071, 9851013439',
         'Safe maternity care',
         'Modern diagnostic support',
         'Family-first consultations',
-        'Emergency care 24/7',
+        'Emergency 24/7: 977-14983152, 01-4981071, 9851013439',
         'Prenatal and newborn support',
         'Advanced diagnostics',
+        '977-14983152, 01-4981071, 9851013439',
         'Personalized treatment plans',
         'Experienced specialist team',
         'Patient-centered healing',
@@ -263,7 +275,7 @@ const translations = {
       ],
     },
     boardSection: {
-      eyebrow: 'Board of Director (BOD)',
+      eyebrow: 'Leaders',
       title: 'The leadership team behind our hospital vision.',
     },
     boardMembers: [
@@ -451,7 +463,7 @@ const translations = {
         { label: 'Our Services', href: '#services' },
         { label: 'Specialities', href: '#departments' },
         { label: 'Medical Technology', href: '#services' },
-        { label: 'News and Events', href: '#testimonials' },
+        { label: 'News and Events', href: '#news-events' },
         { label: 'Blogs', href: '#about' },
         { label: 'Career', href: '#contact' },
         { label: 'Contact Us', href: '#contact' },
@@ -553,7 +565,7 @@ const translations = {
       },
       { label: 'ल्याब रिपोर्ट', href: 'https://labreport.merodoctor.com/212' },
       { label: 'सुझाव', href: '#suggestion' },
-      { label: 'समाचार र घटना', href: '#testimonials' },
+      { label: 'समाचार र घटना', href: '#news-events' },
     ],
     topbar: {
       website: 'वेबसाइट',
@@ -581,12 +593,14 @@ const translations = {
       panelBadge: 'तपाईंले भरिपूर्ण विश्वास गर्न सक्ने సేవ',
       panelItems: ['सुरक्षित मातृत्व सेवा', 'आधुनिक निदान सहयोग', 'परिवारमैत्री परामर्श'],
       marqueeItems: [
+        '977-14983152, 01-4981071, 9851013439',
         'सुरक्षित मातृत्व सेवा',
         'आधुनिक निदान सहयोग',
         'परिवारमैत्री परामर्श',
-        '२४/७ आपतकालीन सेवा',
+        '२४/७ आपतकालीन: 977-14983152, 01-4981071, 9851013439',
         'नवजात र गर्भवती हेरचाह',
         'आधुनिक निदान सुविधाहरू',
+        '977-14983152, 01-4981071, 9851013439',
         'व्यक्तिगत उपचार योजनाहरू',
         'अनुभवी विशेषज्ञ समूह',
         'रोगी केन्द्रित उपचार',
@@ -778,7 +792,7 @@ const translations = {
         { label: 'हाम्रा सेवाहरू', href: '#services' },
         { label: 'विशेषज्ञताहरू', href: '#departments' },
         { label: 'चिकित्सा प्रविधि', href: '#services' },
-        { label: 'समाचार र कार्यक्रम', href: '#testimonials' },
+        { label: 'समाचार र कार्यक्रम', href: '#news-events' },
         { label: 'ब्लग', href: '#about' },
         { label: 'क्यारियर', href: '#contact' },
         { label: 'सम्पर्क गर्नुहोस्', href: '#contact' },
@@ -810,6 +824,30 @@ const heroBanners = [
   { desktop: bannerImage, mobile: bannerMobileImage },
   { desktop: bannerImage2, mobile: banner1Mobile },
 ];
+
+function waitForImage(src, timeoutMs = 2500) {
+  if (!src || typeof window === 'undefined') {
+    return Promise.resolve();
+  }
+
+  return new Promise((resolve) => {
+    const img = new Image();
+    const finish = () => {
+      window.clearTimeout(timer);
+      resolve();
+    };
+    const timer = window.setTimeout(finish, timeoutMs);
+    img.onload = () => {
+      if (typeof img.decode === 'function') {
+        img.decode().then(finish).catch(finish);
+      } else {
+        finish();
+      }
+    };
+    img.onerror = finish;
+    img.src = src;
+  });
+}
 const serviceImageSets = [
   [ourService1Image, ourService2Image, ourService3Image],
   [ourService4Image, ourService5Image, ourService6Image],
@@ -827,11 +865,11 @@ const serviceIconMap = {
 };
 
 const defaultGalleryAllImages = [
-  { src: boardMember3, alt: 'Patient care space', header: 'Patient care space' },
-  { src: boardMember2, alt: 'Hospital facilities', header: 'Hospital facilities' },
-  { src: boardMember4, alt: 'Modern treatment rooms', header: 'Modern treatment rooms' },
-  { src: boardMember5, alt: 'Hospital reception', header: 'Hospital reception' },
-  { src: galleryImage1, alt: 'Hospital interior', header: 'Hospital interior' },
+  { src: boardMember3, galleryKey: 'bod3', alt: 'Patient care space', header: 'Patient care space' },
+  { src: boardMember2, galleryKey: 'bod2', alt: 'Hospital facilities', header: 'Hospital facilities' },
+  { src: boardMember4, galleryKey: 'bod4', alt: 'Modern treatment rooms', header: 'Modern treatment rooms' },
+  { src: boardMember5, galleryKey: 'bod5', alt: 'Hospital reception', header: 'Hospital reception' },
+  { src: galleryImage1, galleryKey: 'Interior Exploration (10)', alt: 'Hospital interior', header: 'Hospital interior' },
 ];
 const galleryVideos = [
   {
@@ -930,78 +968,22 @@ function App() {
 
   useEffect(() => {
     const onResize = () => {
-      setResolvedHeroBanners(window.innerWidth <= 640 ? heroBanners.map((b) => b.mobile) : heroBanners.map((b) => b.desktop));
+      const mobile = window.innerWidth <= 640;
+      setIsMobile(mobile);
+      setResolvedHeroBanners(mobile ? heroBanners.map((b) => b.mobile) : heroBanners.map((b) => b.desktop));
     };
     window.addEventListener('resize', onResize);
     return () => window.removeEventListener('resize', onResize);
   }, []);
 
-  // JS fallback: toggle a dedicated class to fully hide `.nav-wrap` on mobile when header is scrolled
-  useEffect(() => {
-    const getNav = () => document.querySelector('.nav-wrap');
-    const getTopbar = () => document.querySelector('header.topbar');
-    const getToggle = () => document.getElementById('mobile-menu-toggle');
+  const [isMobile, setIsMobile] = useState(() => (typeof window !== 'undefined' ? window.innerWidth <= 640 : false));
 
-    const applyNavHide = () => {
-      try {
-        const nav = getNav();
-        const topbarEl = getTopbar();
-        const menuToggle = getToggle();
-        if (!nav || !topbarEl) return;
-
-        const isMobile = typeof window !== 'undefined' ? window.matchMedia('(max-width: 992px)').matches : false;
-        const scrolled = topbarEl.classList.contains('scrolled');
-        const menuOpen = menuToggle && menuToggle.checked;
-
-        if (isMobile && scrolled && !menuOpen) {
-          nav.classList.add('nav-wrap-hidden-js');
-          try {
-            nav.style.setProperty('display', 'none', 'important');
-            nav.setAttribute('aria-hidden', 'true');
-          } catch (e) {
-            nav.style.display = 'none';
-            nav.setAttribute('aria-hidden', 'true');
-          }
-        } else {
-          nav.classList.remove('nav-wrap-hidden-js');
-          try {
-            nav.style.removeProperty('display');
-            nav.removeAttribute('aria-hidden');
-          } catch (e) {
-            nav.style.display = '';
-            nav.removeAttribute('aria-hidden');
-          }
-        }
-      } catch (e) {
-        // ignore
-      }
-    };
-
-    applyNavHide();
-
-    const onScroll = () => applyNavHide();
-    const onResize = () => applyNavHide();
-    window.addEventListener('scroll', onScroll, { passive: true });
-    window.addEventListener('resize', onResize, { passive: true });
-
-    const topbarEl = getTopbar();
-    const mo = topbarEl ? new MutationObserver(applyNavHide) : null;
-    if (mo && topbarEl) mo.observe(topbarEl, { attributes: true, attributeFilter: ['class'] });
-
-    const menuToggle = getToggle();
-    if (menuToggle) menuToggle.addEventListener('change', applyNavHide);
-
-    return () => {
-      window.removeEventListener('scroll', onScroll);
-      window.removeEventListener('resize', onResize);
-      if (mo) mo.disconnect();
-      if (menuToggle) menuToggle.removeEventListener('change', applyNavHide);
-    };
-  }, []);
   const [language, setLanguage] = useState('en');
   const [transitioning, setTransitioning] = useState(false);
   const [isBooting, setIsBooting] = useState(true);
   const [isReloadingLanguage, setIsReloadingLanguage] = useState(false);
+  const [showSimpleInfoPage, setShowSimpleInfoPage] = useState(false);
+  const [simpleInfoPageKey, setSimpleInfoPageKey] = useState('blogs');
   const [isTopbarScrolled, setIsTopbarScrolled] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
@@ -1021,7 +1003,10 @@ function App() {
   const [serviceImageSetIndex, setServiceImageSetIndex] = useState(0);
   const [newsEventImages, setNewsEventImages] = useState([]);
   const [newsEventVideos, setNewsEventVideos] = useState([]);
+  const [hiddenGalleryImages, setHiddenGalleryImages] = useState([]);
+  const [hiddenGalleryVideos, setHiddenGalleryVideos] = useState([]);
   const [portalServices, setPortalServices] = useState([]);
+  const [portalBoardMembers, setPortalBoardMembers] = useState(null);
   const [siteNotes, setSiteNotes] = useState([]);
   const [contactSettings, setContactSettings] = useState(fallbackContactSettings);
   const [showSiteNotePopup, setShowSiteNotePopup] = useState(false);
@@ -1051,15 +1036,23 @@ function App() {
     .map((entry) => entry.trim())
     .filter(Boolean);
   const [openMobileMegaIndex, setOpenMobileMegaIndex] = useState(null);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const activeContactEmail = contactSettings.email || fallbackContactSettings.email;
   const activeContactLocation = contactSettings.location || fallbackContactSettings.location;
 
-  const activeGalleryAllImages = [
-    ...defaultGalleryAllImages,
-    ...newsEventImages,
-  ];
+  const hiddenGalleryImageKeys = hiddenGalleryImages.map((imageUrl) => {
+    const filename = imageUrl.split('/').pop() || '';
+    return filename.replace(/\.[^.]+$/, '').toLowerCase();
+  });
+  const visibleDefaultGalleryImages = defaultGalleryAllImages.filter((image) => (
+    !hiddenGalleryImageKeys.includes(image.galleryKey.toLowerCase())
+  ));
+  const activeGalleryAllImages = newsEventImages.length > 0
+    ? newsEventImages.filter((image) => !hiddenGalleryImages.includes(image.src))
+    : visibleDefaultGalleryImages;
   const galleryImages = activeGalleryAllImages.map((item, index) => ({ ...item, id: index + 1 }));
-  const combinedGalleryVideos = [...newsEventVideos, ...galleryVideos].reduce((result, video) => {
+  const visibleDefaultGalleryVideos = galleryVideos.filter((video) => !hiddenGalleryVideos.includes(video.href));
+  const combinedGalleryVideos = [...newsEventVideos, ...visibleDefaultGalleryVideos].reduce((result, video) => {
     const href = (video?.href || video?.embedUrl || '').trim();
     if (!href) return result;
     const normalized = href.toLowerCase();
@@ -1126,23 +1119,27 @@ function App() {
         setPortalServices([]);
       });
 
+    fetch('/api/board-members')
+      .then((response) => response.ok ? response.json() : { board_members: [] })
+      .then((data) => {
+        const members = Array.isArray(data.board_members) ? data.board_members : [];
+        setPortalBoardMembers(members.length ? members : null);
+      })
+      .catch(() => {
+        setPortalBoardMembers(null);
+      });
+
     fetch('/api/news-events')
       .then((response) => response.ok ? response.json() : { news_events: [] })
       .then((data) => {
-        const uploadedImages = (data.news_events || [])
-          .filter((item) => item.image_url)
-          .map((item) => ({
-            src: item.image_url,
-            alt: item.gallery_header || item.title || 'News and event image',
-            header: item.gallery_header || item.title || 'News and event image',
-          }));
+        const uploadedImages = Array.isArray(data.gallery_images) ? data.gallery_images : [];
 
         const uploadedVideos = (data.news_events || [])
           .filter((item) => item.video_url)
           .map((item) => ({
             title: item.title || 'News and event video',
             href: item.video_url,
-            embedUrl: item.video_url,
+            embedUrl: normalizeFacebookVideoUrl(item.video_url),
             fallbackText: item.title || 'News and event video',
           }));
 
@@ -1152,6 +1149,17 @@ function App() {
       .catch(() => {
         setNewsEventImages([]);
         setNewsEventVideos([]);
+      });
+
+    fetch('/api/gallery-visibility')
+      .then((response) => response.ok ? response.json() : { hidden_images: [], hidden_videos: [] })
+      .then((data) => {
+        setHiddenGalleryImages(Array.isArray(data.hidden_images) ? data.hidden_images : []);
+        setHiddenGalleryVideos(Array.isArray(data.hidden_videos) ? data.hidden_videos : []);
+      })
+      .catch(() => {
+        setHiddenGalleryImages([]);
+        setHiddenGalleryVideos([]);
       });
 
     fetch('/api/site-notes')
@@ -1420,7 +1428,8 @@ function App() {
       const rawHash = window.location.hash.replace('#', '').toLowerCase();
       const pathname = window.location.pathname.toLowerCase();
       const hash = rawHash || (pathname.endsWith('/bod') ? 'bod' : '');
-      const isBoardRoute = hash === 'bod' || pathname.endsWith('/bod');
+      const isBoardRoute = hash === 'bod' || hash === 'board' || hash === 'leadership' || pathname.endsWith('/bod') || pathname.endsWith('/board');
+      const simpleInfoPageKey = ['blogs', 'career', 'academic', 'medical-technology', 'opd-services'].includes(hash) ? hash : null;
       setShowAboutPage(hash === 'about');
       setShowSuggestionPage(hash === 'suggestion' || hash === 'suggestion-page');
       setShowHealthPackagesPage(hash === 'health-packages' || hash === 'health-packages-page');
@@ -1428,6 +1437,8 @@ function App() {
       setShowDepartmentPage(hash === 'departments' || hash === 'department');
       setShowBoardPage(isBoardRoute);
       setShowOpdPage(hash === 'opd-services');
+      setShowSimpleInfoPage(Boolean(simpleInfoPageKey));
+      setSimpleInfoPageKey(simpleInfoPageKey || 'blogs');
 
       if (isBoardRoute) {
         setShowDoctorsPage(false);
@@ -1436,6 +1447,7 @@ function App() {
         setShowHealthPackagesPage(false);
         setShowNewsEventsPage(false);
         setShowAboutPage(false);
+        setShowSimpleInfoPage(false);
         setShowDoctorProfile(false);
         return;
       }
@@ -1479,14 +1491,15 @@ function App() {
   }, []);
 
   const [tabIndicatorStyle, setTabIndicatorStyle] = useState({ left: 0, width: 0 });
-  const [bootLogoCycle, setBootLogoCycle] = useState(Date.now());
-  const [reloadLogoCycle, setReloadLogoCycle] = useState(0);
   const bannerTimerRef = useRef(null);
   const transitionTimeoutRef = useRef(null);
   const revealTimeoutRef = useRef(null);
   const serviceRotateTimerRef = useRef(null);
   const tabListRef = useRef(null);
   const bannerPausedRef = useRef(false);
+  const heroTouchStartXRef = useRef(null);
+  const heroTouchStartYRef = useRef(null);
+  const heroTouchActiveRef = useRef(false);
   const languageSwitchTimerRef = useRef(null);
   const megaMenuRef = useRef(null);
 
@@ -1526,6 +1539,17 @@ function App() {
   };
   const megaMenuCloseTimerRef = useRef(null);
   const t = translations[language] || translations.en;
+  const activeBoardMembers = portalBoardMembers || t.boardMembers;
+  const boardGroups = activeBoardMembers.reduce((groups, member) => {
+    const category = member.category || (language === 'en' ? 'Board of Directors' : 'बोर्ड अफ डाइरेक्टर');
+    const existingGroup = groups.find((group) => group.category === category);
+    if (existingGroup) {
+      existingGroup.members.push(member);
+    } else {
+      groups.push({ category, members: [member] });
+    }
+    return groups;
+  }, []);
   const visibleServices = isMobileViewport
     ? (t.services || []).slice(0, visibleServiceCards)
     : (t.services || []);
@@ -1552,6 +1576,20 @@ function App() {
       return { ...item, menu: doctorMenuEntries };
     }
     return item;
+  });
+
+  const mobileNavItems = [...resolvedNavItems].sort((a, b) => {
+    const priority = {
+      'OUR SERVICES': 0,
+      'हाम्रा सेवाहरू': 0,
+      'FIND A DOCTOR': 1,
+      'डाक्टर खोज्नुहोस्': 1,
+      DEPARTMENT: 2,
+      विभाग: 2,
+    };
+    const aPriority = priority[a.label] ?? 99;
+    const bPriority = priority[b.label] ?? 99;
+    return aPriority - bPriority;
   });
 
   const footerOurServicesList = portalServices.length > 0
@@ -1688,24 +1726,89 @@ function App() {
     changeBanner(nextIndex);
   };
 
+  // Mobile swipe: allow users to swipe left/right on the hero to change banners
+  useEffect(() => {
+    if (typeof window === 'undefined') return undefined;
+    const el = document.querySelector('.hero');
+    if (!el) return undefined;
+
+    const onTouchStart = (ev) => {
+      if (!ev.touches || ev.touches.length === 0) return;
+      stopBannerRotation();
+      heroTouchActiveRef.current = true;
+      heroTouchStartXRef.current = ev.touches[0].clientX;
+      heroTouchStartYRef.current = ev.touches[0].clientY;
+    };
+
+    const onTouchEnd = (ev) => {
+      if (!heroTouchActiveRef.current) return;
+      heroTouchActiveRef.current = false;
+      const touch = (ev.changedTouches && ev.changedTouches[0]) || null;
+      if (!touch) {
+        startBannerRotation();
+        return;
+      }
+      const dx = touch.clientX - (heroTouchStartXRef.current || 0);
+      const dy = touch.clientY - (heroTouchStartYRef.current || 0);
+
+      // Thresholds: horizontal swipe > 50px and more horizontal than vertical
+      if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy) * 1.5) {
+        if (dx < 0) {
+          handleNextBanner();
+        } else {
+          handlePrevBanner();
+        }
+      }
+
+      // resume rotation after short delay
+      window.setTimeout(() => {
+        startBannerRotation();
+      }, 600);
+    };
+
+    el.addEventListener('touchstart', onTouchStart, { passive: true });
+    el.addEventListener('touchend', onTouchEnd, { passive: true });
+
+    return () => {
+      el.removeEventListener('touchstart', onTouchStart);
+      el.removeEventListener('touchend', onTouchEnd);
+    };
+  }, [bannerIndex, heroSlides.length]);
+
 
   useEffect(() => {
-    // Temporarily disable smooth-scroll setup while debugging scroll issues.
-    // initAppSetup();
+    let cancelled = false;
+    const completeBoot = () => {
+      if (!cancelled) {
+        setIsBooting(false);
+      }
+    };
 
-    const navEntries = performance.getEntriesByType?.('navigation') || [];
-    const navigationType = navEntries[0]?.type || (performance?.navigation?.type === 1 ? 'reload' : 'other');
-    console.log(`App load navigation type: ${navigationType}`);
-    console.log(`Boot logo src: ${logoAnimation}?v=${bootLogoCycle}`);
+    const readyWhenSafe = async () => {
+      const firstHero = resolvedHeroBanners[0];
+      await Promise.all([
+        waitForImage(logoAnimation, 4500),
+        waitForImage(firstHero, 4500),
+      ]);
+      completeBoot();
+    };
 
-    setBootLogoCycle(Date.now());
-    const introTimer = window.setTimeout(() => setIsBooting(false), 1400);
-    return () => window.clearTimeout(introTimer);
-  }, []);
+    if (typeof window === 'undefined') {
+      completeBoot();
+      return undefined;
+    }
 
-  useEffect(() => {
-    console.log('Overlay state update:', { isBooting, isReloadingLanguage, bootLogoCycle, reloadLogoCycle });
-  }, [isBooting, isReloadingLanguage, bootLogoCycle, reloadLogoCycle]);
+    if (document.readyState === 'complete') {
+      readyWhenSafe();
+    } else {
+      window.addEventListener('load', readyWhenSafe, { once: true });
+    }
+
+    return () => {
+      cancelled = true;
+      window.removeEventListener('load', readyWhenSafe);
+    };
+  }, [resolvedHeroBanners]);
 
   useEffect(() => {
 
@@ -1730,6 +1833,12 @@ function App() {
 
   useEffect(() => {
     const handleScroll = () => {
+      // Avoid toggling topbar scrolled state on small screens to prevent header height glitches
+      if (typeof window !== 'undefined' && window.innerWidth <= 767) {
+        setIsTopbarScrolled(false);
+        return;
+      }
+
       setIsTopbarScrolled(window.scrollY > 0);
     };
 
@@ -1773,6 +1882,12 @@ function App() {
     const observer = new IntersectionObserver((entries) => {
       const entry = entries[0];
       // when sentinel is not intersecting the viewport, page has been scrolled
+      // On small screens we don't want the topbar to toggle to `.scrolled` (prevents height glitches)
+      if (typeof window !== 'undefined' && window.innerWidth <= 767) {
+        setIsTopbarScrolled(false);
+        return;
+      }
+
       setIsTopbarScrolled(!entry.isIntersecting);
     }, { root: null, threshold: 0 });
 
@@ -1874,28 +1989,56 @@ function App() {
     }
   }, [showSuggestionPage, showHealthPackagesPage, showNewsEventsPage, showAboutPage, showDoctorsPage, showDepartmentPage, showBoardPage, showDoctorProfile, labReportOpen]);
 
+  const closeMobileMenu = () => {
+    setIsMobileMenuOpen(false);
+    setOpenMobileMegaIndex(null);
+  };
+
+  useEffect(() => {
+    document.body.classList.toggle('mobile-menu-open', isMobileMenuOpen);
+
+    const onKeyDown = (event) => {
+      if (event.key === 'Escape') closeMobileMenu();
+    };
+
+    if (isMobileMenuOpen) {
+      document.body.style.overflow = 'hidden';
+      document.documentElement.style.overflow = 'hidden';
+      window.addEventListener('keydown', onKeyDown);
+    } else if (!labReportOpen) {
+      document.body.style.overflow = '';
+      document.documentElement.style.overflow = '';
+    }
+
+    return () => {
+      document.body.classList.remove('mobile-menu-open');
+      window.removeEventListener('keydown', onKeyDown);
+      if (!labReportOpen) {
+        document.body.style.overflow = '';
+        document.documentElement.style.overflow = '';
+      }
+    };
+  }, [isMobileMenuOpen, labReportOpen]);
+
   const handleLanguageToggle = () => {
     if (isBooting || isReloadingLanguage) {
       return;
     }
 
-    console.log('Language switch triggered: reload overlay active');
     const nextLanguage = language === 'en' ? 'ne' : 'en';
     setTransitioning(true);
     setIsReloadingLanguage(true);
-    setReloadLogoCycle(Date.now());
 
     if (languageSwitchTimerRef.current) {
       window.clearTimeout(languageSwitchTimerRef.current);
     }
 
     languageSwitchTimerRef.current = window.setTimeout(() => {
-      console.log('Language switch complete: hiding reload overlay');
       setLanguage(nextLanguage);
       setTransitioning(false);
       setIsReloadingLanguage(false);
       languageSwitchTimerRef.current = null;
-    }, 1200);
+    }, 500);
   };
 
   const handleChange = (e) => {
@@ -1957,7 +2100,9 @@ function App() {
     setShowDoctorsPage(false);
     setShowDepartmentPage(false);
     setShowBoardPage(false);
+    setShowSimpleInfoPage(false);
     setShowDoctorProfile(false);
+    setShowOpdPage(false);
     // Navigate to the site root so logos always take the user to the home page
     const originRoot = `${window.location.origin}/`;
     if (window.location.href !== originRoot) {
@@ -1970,6 +2115,8 @@ function App() {
 
   const handleNavItemInteraction = (event, item) => {
     if (!item) return;
+
+    const itemLabel = (item.label || item.title || '').toString().toLowerCase();
 
     if (item.label === 'OUR SERVICES' || item.label === 'हाम्रा सेवाहरू') {
       event.preventDefault();
@@ -1991,9 +2138,39 @@ function App() {
       handleHealthPackagesOpen();
       return;
     }
-    if (/news and event(?:s)?(?:['’]s)?/i.test(item.label) || /समाचार|कार्यक्रम/i.test(item.label)) {
+    if (/news and event(?:s)?(?:['’]s)?/i.test(itemLabel) || /समाचार|कार्यक्रम/i.test(itemLabel)) {
       event.preventDefault();
       handleNewsEventsOpen();
+      return;
+    }
+    if (itemLabel.includes('blogs') || itemLabel.includes('ब्लग')) {
+      event.preventDefault();
+      handleSimpleInfoOpen('blogs');
+      return;
+    }
+    if (itemLabel.includes('career') || itemLabel.includes('क्यारियर')) {
+      event.preventDefault();
+      handleSimpleInfoOpen('career');
+      return;
+    }
+    if (itemLabel.includes('academic') || itemLabel.includes('शैक्षिक')) {
+      event.preventDefault();
+      handleSimpleInfoOpen('academic');
+      return;
+    }
+    if (itemLabel.includes('medical technology') || itemLabel.includes('चिकित्सा प्रविधि')) {
+      event.preventDefault();
+      handleSimpleInfoOpen('medical-technology');
+      return;
+    }
+    if (itemLabel.includes('board member') || itemLabel.includes('board of director') || itemLabel.includes('बोर्ड')) {
+      event.preventDefault();
+      handleBoardOpen();
+      return;
+    }
+    if (itemLabel.includes('opd') || itemLabel.includes('opd services')) {
+      event.preventDefault();
+      handleSimpleInfoOpen('opd-services');
       return;
     }
     if (item.label === 'FIND A DOCTOR' || item.label === 'डाक्टर खोज्नुहोस्') {
@@ -2025,12 +2202,31 @@ function App() {
     }
     if (item.href?.startsWith('http') && item.href.includes('labreport')) {
       event.preventDefault();
-      setLabReportUrl(item.href);
-      setLabReportOpen(true);
+      window.open(item.href, '_blank', 'noopener,noreferrer');
     }
   };
 
+  const handleSimpleInfoOpen = (pageKey) => {
+    setShowSimpleInfoPage(true);
+    setSimpleInfoPageKey(pageKey);
+    setShowAboutPage(false);
+    setShowSuggestionPage(false);
+    setShowHealthPackagesPage(false);
+    setShowNewsEventsPage(false);
+    setShowDoctorsPage(false);
+    setShowDepartmentPage(false);
+    setShowBoardPage(false);
+    setShowOpdPage(false);
+    setShowDoctorProfile(false);
+    const hash = pageKey === 'opd-services' ? '#opd-services' : `#${pageKey}`;
+    if (window.location.hash !== hash) {
+      window.history.pushState({}, '', hash);
+    }
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   const handleBoardOpen = () => {
+    setShowSimpleInfoPage(false);
     setShowSuggestionPage(false);
     setShowHealthPackagesPage(false);
     setShowNewsEventsPage(false);
@@ -2038,14 +2234,19 @@ function App() {
     setShowDoctorsPage(false);
     setShowDepartmentPage(false);
     setShowBoardPage(true);
+    setShowOpdPage(false);
     setShowDoctorProfile(false);
-    window.history.pushState({}, '', '/portal/add-bod');
+    if (window.location.hash !== '#board') {
+      window.history.pushState({}, '', '#board');
+    }
     window.scrollTo({ top: 0, behavior: 'auto' });
   };
 
   const handleBoardClose = () => {
     setShowBoardPage(false);
-    window.history.pushState({}, '', '/');
+    if (window.location.hash === '#board' || window.location.hash === '#bod' || window.location.hash === '#leadership') {
+      window.history.pushState({}, '', '/');
+    }
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -2199,13 +2400,13 @@ function App() {
   return (
     <>
       <div className={`page-intro-overlay${isBooting ? ' active' : ' complete'}`} aria-hidden={!isBooting}>
-        <div className="page-intro-card">
-          <img className="page-intro-logo" src={`${logoAnimation}?v=${bootLogoCycle}`} alt="Vinayak Hospital & Maternity Home animated logo" />
+        <div className="page-intro-card" aria-live="polite">
+          <img className="page-intro-logo" src={logoAnimation} alt="" loading="eager" decoding="async" />
         </div>
       </div>
       <div className={`page-reload-overlay${isReloadingLanguage ? ' active' : ''}`} aria-hidden={!isReloadingLanguage}>
-        <div className="page-reload-card">
-          <img className="page-intro-logo" src={`${logoAnimation}?v=${reloadLogoCycle}`} alt="Vinayak Hospital & Maternity Home animated logo" />
+        <div className="page-reload-card" aria-live="polite">
+          <img className="page-intro-logo" src={logoAnimation} alt="" loading="eager" decoding="async" />
         </div>
       </div>
       {showSiteNotePopup && siteNotes.length > 0 && (
@@ -2235,47 +2436,50 @@ function App() {
                   alt="Vinayak Hospital logo"
                 />
               </a>
-              <div className="mobile-nav-toggle">
-                <input id="mobile-menu-toggle" className="mobile-menu-toggle" type="checkbox" aria-label="Toggle navigation menu" />
-                <label htmlFor="mobile-menu-toggle" className="hamburger" aria-label="Open navigation menu">
+              <div className={`mobile-nav-toggle${isMobileMenuOpen ? ' is-open' : ''}`}>
+                <button
+                  type="button"
+                  className="hamburger"
+                  aria-label={isMobileMenuOpen ? 'Close navigation menu' : 'Open navigation menu'}
+                  aria-expanded={isMobileMenuOpen}
+                  aria-controls="mobile-navigation-panel"
+                  onClick={() => setIsMobileMenuOpen((open) => !open)}
+                >
                   <svg viewBox="0 0 32 32" aria-hidden="true">
                     <path className="line line-top-bottom" d="M27 10 13 10C10.8 10 9 8.2 9 6 9 3.5 10.8 2 13 2 15.2 2 17 3.8 17 6L17 26C17 28.2 18.8 30 21 30 23.2 30 25 28.2 25 26 25 23.8 23.2 22 21 22L7 22" />
                     <path className="line" d="M7 16 27 16" />
                   </svg>
-                </label>
-                <nav className="mobile-menu-panel" aria-label="Mobile navigation">
-                  <a
-                    className="mobile-menu-phone"
-                    href={`tel:${contactPhoneNumbers[0].replace(/\D/g, '')}`}
-                    onClick={() => {
-                      const menuToggle = document.getElementById('mobile-menu-toggle');
-                      if (menuToggle) menuToggle.checked = false;
-                    }}
-                    aria-label={`Call ${contactPhoneNumbers.join(', ')}`}
-                  >
-                    <Phone size={16} strokeWidth={2} />
-                    <span className="mobile-menu-phone-text">{contactPhoneNumbers.join(', ')}</span>
-                  </a>
-                  <div className="mobile-menu-contact-utility">
-                    <button
-                      type="button"
-                      className="mobile-menu-action language-switcher"
-                      onClick={() => {
-                        // Toggle language but keep mobile menu open so image buttons remain visible
-                        handleLanguageToggle();
-                      }}
-                      aria-label={`Switch language`}
+                </button>
+                <div className={`mobile-menu-overlay${isMobileMenuOpen ? ' open' : ''}`} aria-hidden={!isMobileMenuOpen} onClick={closeMobileMenu}>
+                  <nav id="mobile-navigation-panel" className="mobile-menu-panel" aria-label="Mobile navigation" onClick={(event) => event.stopPropagation()}>
+                    <a
+                      className="mobile-menu-phone"
+                      href={`tel:${contactPhoneNumbers[0].replace(/\D/g, '')}`}
+                      onClick={closeMobileMenu}
+                      aria-label={`Call ${contactPhoneNumbers.join(', ')}`}
                     >
-                      <img
-                        className="language-flag"
-                        src={nextLanguageFlag}
-                        alt="नेपाली flag"
-                      />
-                      <span>नेपाली</span>
-                    </button>
-                  </div>
+                      <Phone size={16} strokeWidth={2} />
+                      <span className="mobile-menu-phone-text">{contactPhoneNumbers.join(', ')}</span>
+                    </a>
+                    <div className="mobile-menu-contact-utility">
+                      <button
+                        type="button"
+                        className="mobile-menu-action language-switcher"
+                        onClick={() => {
+                          handleLanguageToggle();
+                        }}
+                        aria-label="Switch language"
+                      >
+                        <img
+                          className="language-flag"
+                          src={nextLanguageFlag}
+                          alt="नेपाली flag"
+                        />
+                        <span>नेपाली</span>
+                      </button>
+                    </div>
 
-                  {resolvedNavItems.map((item, index) => (
+                    {mobileNavItems.map((item, index) => (
                       <div key={`mobile-${item.label}`} style={{ width: '100%' }}>
                         {item.menu && item.menu.length > 0 && !['HEALTH PACKAGES', 'हाम्रा सेवाहरू', 'FIND A DOCTOR', 'डाक्टर खोज्नुहोस्'].includes(item.label) ? (
                           <button
@@ -2283,9 +2487,8 @@ function App() {
                             className={`mobile-nav-item has-mega${openMobileMegaIndex === index ? ' open' : ''}`}
                             aria-expanded={openMobileMegaIndex === index}
                             onClick={(event) => {
-                              // toggle accordion for mobile mega menus when anywhere on the row is clicked
                               event.preventDefault();
-                              setOpenMobileMegaIndex(openMobileMegaIndex === index ? null : index);
+                              setOpenMobileMegaIndex((current) => (current === index ? null : index));
                             }}
                           >
                             {item.label}
@@ -2297,24 +2500,8 @@ function App() {
                             target={item.href?.startsWith('http') ? '_blank' : undefined}
                             rel={item.href?.startsWith('http') ? 'noreferrer' : undefined}
                             onClick={(event) => {
-                              if (item.label === 'FIND A DOCTOR' || item.label === 'डाक्टर खोज्नुहोस्') {
-                                event.preventDefault();
-                                setShowDoctorsPage(true);
-                                setShowSuggestionPage(false);
-                                setShowHealthPackagesPage(false);
-                                setShowDepartmentPage(false);
-                                setShowNewsEventsPage(false);
-                                if (window.location.hash !== '#doctors') {
-                                  window.history.pushState({}, '', '#doctors');
-                                }
-                                window.scrollTo({ top: 0, behavior: 'smooth' });
-                              } else {
-                                handleNavItemInteraction(event, item);
-                              }
-                              const menuToggle = document.getElementById('mobile-menu-toggle');
-                              if (menuToggle) {
-                                menuToggle.checked = false;
-                              }
+                              handleNavItemInteraction(event, item);
+                              closeMobileMenu();
                             }}
                           >
                             {item.label}
@@ -2342,9 +2529,7 @@ function App() {
                                   } else {
                                     handleNavItemInteraction(e, normalizedSubItem);
                                   }
-
-                                  const menuToggle = document.getElementById('mobile-menu-toggle');
-                                  if (menuToggle) menuToggle.checked = false;
+                                  closeMobileMenu();
                                 }}
                               >
                                 {m.title}
@@ -2354,9 +2539,8 @@ function App() {
                         </div>
                       </div>
                     ))}
-
-                  
-                </nav>
+                  </nav>
+                </div>
               </div>
               <div className="contact-line">
                 <Phone size={14} strokeWidth={2} />
@@ -2650,8 +2834,8 @@ function App() {
                   <iframe
                     src={labReportUrl}
                     title="Lab Report"
-                    scrolling="no"
-                    style={{ width: '100%', height: '100%', border: '0', overflow: 'hidden', maxWidth: '100%' }}
+                    scrolling="yes"
+                    style={{ width: '100%', height: '100%', border: '0', overflow: 'auto', maxWidth: '100%' }}
                   />
                 </div>
               </div>
@@ -2662,20 +2846,22 @@ function App() {
 
         <main>
           {showSuggestionPage ? (
-            <SuggestionPage language={language} onBack={handleSuggestionClose} />
+            <Suspense fallback={null}><SuggestionPage language={language} onBack={handleSuggestionClose} /></Suspense>
           ) : showHealthPackagesPage ? (
-            <HealthPackagesPage language={language} onBack={handleHomeNavigation} />
+            <Suspense fallback={null}><HealthPackagesPage language={language} onBack={handleHomeNavigation} /></Suspense>
           ) : showNewsEventsPage ? (
-            <NewsEventsPage
+            <Suspense fallback={null}><NewsEventsPage
               language={language}
               onBack={handleNewsEventsClose}
               galleryImages={activeGalleryAllImages}
               galleryVideos={combinedGalleryVideos}
-            />
+            /></Suspense>
           ) : showDoctorProfile ? (
-            <DoctorProfile doctor={selectedDoctor} language={language} onBack={() => { closeDoctorProfile(); setShowDoctorsPage(true); }} />
+            <Suspense fallback={null}><DoctorProfile doctor={selectedDoctor} language={language} onBack={() => { closeDoctorProfile(); setShowDoctorsPage(true); }} /></Suspense>
+          ) : showSimpleInfoPage ? (
+            <Suspense fallback={null}><SimpleInfoPage language={language} pageKey={simpleInfoPageKey} /></Suspense>
           ) : showBoardPage ? (
-            <BoardPage language={language} members={t.boardMembers} onBack={handleBoardClose} />
+            <Suspense fallback={null}><BoardPage language={language} members={activeBoardMembers} onBack={handleBoardClose} /></Suspense>
           ) : showDepartmentPage ? (
             <DepartmentPage
               language={language}
@@ -2683,32 +2869,42 @@ function App() {
               selectedDepartmentSlug={selectedDepartmentSlug}
             />
           ) : showDoctorsPage ? (
-            <DoctorsPage language={language} doctors={doctorCatalogWithSlug} onBack={handleHomeNavigation} onSelectDoctor={openDoctorProfile} />
+            <Suspense fallback={null}><DoctorsPage language={language} doctors={doctorCatalogWithSlug} onBack={handleHomeNavigation} onSelectDoctor={openDoctorProfile} /></Suspense>
           ) : showAboutPage ? (
-            <AboutPage language={language} onBack={handleAboutClose} />
+            <Suspense fallback={null}><AboutPage language={language} onBack={handleAboutClose} /></Suspense>
           ) : (
             <>
-          <section id="home" className="hero section min-h-screen flex items-center justify-center" style={{ minHeight: '1000px', height: '1000px' }}>
-            <div className="hero-background">
-                {resolvedHeroBanners.map((src, idx) => (
-                  <div
-                    key={`${src}-${idx}`}
-                    className={`hero-background-layer ${bannerIndex === idx ? 'active' : ''}`}
-                    style={{ backgroundImage: `url(${src})` }}
-                  />
-                ))}
+          <section id="home" className="hero section">
+            <div className="hero-background" aria-hidden="true">
+                {resolvedHeroBanners.map((src, idx) => {
+                  return (
+                    <div
+                      key={`${src}-${idx}`}
+                      className={`hero-background-layer ${bannerIndex === idx ? 'active' : ''}`}
+                      role="img"
+                      aria-hidden="true"
+                      style={{ backgroundImage: `url(${src})` }}
+                    />
+                  );
+                })}
               </div>
             <div className="container hero-grid mx-auto max-w-6xl">
               <div
                 className={`hero-copy reveal transition-opacity transition-transform duration-500 ${contentVisible ? 'opacity-100 translate-y-0 pointer-events-auto' : 'opacity-0 translate-y-4 pointer-events-none'}`}
               >
                 <p className="eyebrow">{heroSlides[bannerIndex].eyebrow}</p>
-                <h1 className={`hero-title hero-title-animated ${titleAnimate ? 'hero-title-active' : ''} ${language === 'en' ? '' : 'hero-title--nepali'}`}>{heroSlides[bannerIndex].title}</h1>
+                <h1
+                  className={`hero-title hero-title-animated ${titleAnimate ? 'hero-title-active' : ''} ${language === 'en' ? '' : 'hero-title--nepali'}`}
+                >
+                  {bannerIndex === 1 ? (
+                    <>
+                      <span className="hero-title-desktop">Modern care for every family.</span>
+                      <span className="hero-title-mobile">{heroSlides[bannerIndex].title}</span>
+                    </>
+                  ) : heroSlides[bannerIndex].title}
+                </h1>
                 <p className={`hero-text ${language === 'en' ? '' : 'hero-text--nepali'}`}>{heroSlides[bannerIndex].text}</p>
                 <div className="hero-cta">
-                  <div className="hero-service-badge">
-                    {heroBadgeText}
-                  </div>
                   <a
                     href="#doctors"
                     className="uiverse-button"
@@ -2728,33 +2924,39 @@ function App() {
                       ></path>
                     </svg>
                   </a>
-                  <div className="hero-nav-buttons">
-                    <button
-                      type="button"
-                      className="nav-icon-button"
-                      aria-label="Previous"
-                      onClick={handlePrevBanner}
-                      onMouseEnter={stopBannerRotation}
-                      onMouseLeave={startBannerRotation}
-                    >
-                      <svg viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-                        <path d="M10 3L5 8L10 13" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                      </svg>
-                      <span className="nav-icon-text">Prev</span>
-                    </button>
-                    <button
-                      type="button"
-                      className="nav-icon-button"
-                      aria-label="Next"
-                      onClick={handleNextBanner}
-                      onMouseEnter={stopBannerRotation}
-                      onMouseLeave={startBannerRotation}
-                    >
-                      <span className="nav-icon-text">Next</span>
-                      <svg viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-                        <path d="M6 3L11 8L6 13" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                      </svg>
-                    </button>
+                </div>
+              </div>
+
+              <div className="hero-trust-grid" aria-label="Trust metrics">
+                <div className="trust-item">
+                  <span className="trust-icon trust-icon--blue" aria-hidden="true">
+                    <svg viewBox="0 0 48 48" className="trust-svg" aria-hidden="true">
+                      <path d="M24 6l13 4.5v9.7c0 9.3-6.1 17.9-13 21.8-6.9-3.9-13-12.5-13-21.8v-9.7L24 6z" className="trust-svg-shield" />
+                      <path d="M17 24.5l4.4 4.6 9.5-11" className="trust-svg-check" />
+                    </svg>
+                  </span>
+                  <div className="trust-copy">
+                    <div className="trust-line">
+                      <span className="trust-value">31+</span>
+                      <span className="trust-label">years</span>
+                    </div>
+                    <span className="trust-label trust-label--sub">of care</span>
+                  </div>
+                </div>
+                <div className="trust-item trust-item--emergency">
+                  <span className="trust-icon trust-icon--red" aria-hidden="true">
+                    <svg viewBox="0 0 48 48" className="trust-svg" aria-hidden="true">
+                      <circle cx="24" cy="24" r="16" className="trust-svg-ring trust-svg-ring--bg" />
+                      <path d="M24 14v10l7 4" className="trust-svg-hand" />
+                      <circle cx="24" cy="24" r="2.4" className="trust-svg-dot" />
+                    </svg>
+                  </span>
+                  <div className="trust-copy">
+                    <div className="trust-line">
+                      <span className="trust-value">24/7</span>
+                      <span className="trust-label">emergency</span>
+                    </div>
+                    <span className="trust-label trust-label--sub">open</span>
                   </div>
                 </div>
               </div>
@@ -2787,24 +2989,31 @@ function App() {
                 )}
               </div>
 
-              <div className="board-grid">
-                {t.boardMembers.map((member) => (
-                  <article key={member.name} className="board-card reveal">
-                    <div className={`board-media${!member.image ? ' board-media-placeholder' : ''}`}>
-                      {member.image ? (
-                        <img src={member.image} alt={member.name} />
-                      ) : (
-                        <svg className="board-profile-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-                          <path d="M12 12.2a4.15 4.15 0 1 0-4.15-4.15A4.15 4.15 0 0 0 12 12.2Zm0 2.1c-4.36 0-7.9 2.31-7.9 5.16v.94h15.8v-.94c0-2.85-3.54-5.16-7.9-5.16Z" fill="currentColor" />
-                        </svg>
-                      )}
+              <div className="board-groups">
+                {boardGroups.map((group) => (
+                  <section className="board-group" key={group.category} aria-labelledby={`board-category-${group.category}`}>
+                    <h3 className="board-category-heading" id={`board-category-${group.category}`}>{group.category}</h3>
+                    <div className="board-grid">
+                      {group.members.map((member) => (
+                        <article key={member.name} className="board-card reveal">
+                          <div className={`board-media${!member.image ? ' board-media-placeholder' : ''}`}>
+                            {member.image ? (
+                              <img src={member.image} alt={member.name} />
+                            ) : (
+                              <svg className="board-profile-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                                <path d="M12 12.2a4.15 4.15 0 1 0-4.15-4.15A4.15 4.15 0 0 0 12 12.2Zm0 2.1c-4.36 0-7.9-2.31-7.9 5.16v.94h15.8v-.94c0-2.85-3.54-5.16-7.9-5.16Z" fill="currentColor" />
+                              </svg>
+                            )}
+                          </div>
+                          <div className="board-content">
+                            <h3>{member.name}</h3>
+                            <span className="board-role">{member.role}</span>
+                            <p>{member.description}</p>
+                          </div>
+                        </article>
+                      ))}
                     </div>
-                    <div className="board-content">
-                      <h3>{member.name}</h3>
-                      <span className="board-role">{member.role}</span>
-                      <p>{member.description}</p>
-                    </div>
-                  </article>
+                  </section>
                 ))}
               </div>
             </div>
@@ -3169,8 +3378,8 @@ function App() {
                     <img
                       key={`gallery-img-${galleryMainIndex}`}
                       className={`gallery-main-image-img gallery-slide-${galleryTransitionDirection} loaded`}
-                      src={activeGalleryAllImages[galleryMainIndex]?.src || defaultGalleryAllImages[0].src}
-                      alt={activeGalleryAllImages[galleryMainIndex]?.alt || defaultGalleryAllImages[0].alt}
+                      src={activeGalleryAllImages[galleryMainIndex]?.src || ''}
+                      alt={activeGalleryAllImages[galleryMainIndex]?.alt || 'Hospital gallery image'}
                       onLoad={() => setGalleryMainImageLoaded(true)}
                     />
                     <button type="button" className="gallery-image-nav gallery-image-prev" onClick={handleGalleryPrev} aria-label="Previous gallery image">
@@ -3202,7 +3411,7 @@ function App() {
                 <div className="gallery-panel gallery-panel--video" ref={galleryVideoRef}>
                   {selectedVideoIndex === null ? (
                     <div className="video-grid">
-                      {galleryVideos.slice(0, 4).map((video, index) => (
+                      {combinedGalleryVideos.slice(0, 4).map((video, index) => (
                         <div key={video.title || `${video.fallbackText}-${index}`} className="video-card reveal">
                           <div
                             className="video-card-hover-layer"
@@ -3391,7 +3600,7 @@ function App() {
         </footer>
       </div>
 
-      <div ref={chatWidgetRef} className={`chat-widget${isChatOpen ? ' open' : ''}`}>
+      {false && <div ref={chatWidgetRef} className={`chat-widget${isChatOpen ? ' open' : ''}`}>
         <div className="chat-header">
           <div className="chat-header-title">
             <div>
@@ -3488,7 +3697,7 @@ function App() {
             <button type="button">Rate Us</button>
           </div>
         </div>
-      </div>
+      </div>}
 
       {!isChatOpen && (
         <div className="floating-actions-stack" aria-label="Quick actions">
@@ -3505,14 +3714,6 @@ function App() {
               </svg>
             </button>
           )}
-          <button
-            type="button"
-            className="chat-launcher-btn"
-            onClick={() => setIsChatOpen(true)}
-            aria-label="Open chat widget"
-          >
-            <MessageCircle size={20} />
-          </button>
         </div>
       )}
     </>
