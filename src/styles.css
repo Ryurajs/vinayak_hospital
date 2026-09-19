@@ -5018,6 +5018,12 @@ body.about-nav-black .topbar:not(.scrolled) .nav-item > a::after {
   text-transform: uppercase;
 }
 
+@media (max-width: 767px) {
+  .board-category-heading {
+    text-align: center;
+  }
+}
+
 .board-group .board-grid,
 .board-page-group .doctor-grid {
   margin-top: 0;

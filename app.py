@@ -1,8 +1,9 @@
 import json
 import os
+import secrets
 import sqlite3
 import uuid
-from datetime import datetime
+from datetime import datetime, timedelta
 from urllib.parse import quote
 from flask import Flask, jsonify, render_template, request, redirect, session, url_for, send_from_directory
 from flask_cors import CORS
@@ -16,10 +17,32 @@ from routes.contacts import contacts_bp
 
 load_dotenv()
 
+
+def _get_secret_key():
+    configured_key = os.getenv('SECRET_KEY')
+    if configured_key:
+        return configured_key
+
+    secret_key_path = os.path.join(os.path.dirname(__file__), '.flask_secret_key')
+    try:
+        with open(secret_key_path, 'r', encoding='utf-8') as secret_file:
+            persisted_key = secret_file.read().strip()
+        if persisted_key:
+            return persisted_key
+    except FileNotFoundError:
+        pass
+
+    persisted_key = secrets.token_hex(32)
+    with open(secret_key_path, 'w', encoding='utf-8') as secret_file:
+        secret_file.write(persisted_key)
+    return persisted_key
+
 app = Flask(__name__, static_folder='image', static_url_path='/image')
 app.config['JSON_SORT_KEYS'] = False
 app.config['SQLITE_DB_PATH'] = os.getenv('SQLITE_DB_PATH', 'database/hospital.db')
-app.config['SECRET_KEY'] = os.getenv('SECRET_KEY') or os.urandom(32).hex()
+app.config['SECRET_KEY'] = _get_secret_key()
+app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(hours=24)
+app.config['SESSION_REFRESH_EACH_REQUEST'] = False
 
 allowed_origins = [
     origin.strip()
@@ -1862,6 +1885,7 @@ def portal_login_submit():
     if not user or not check_password_hash(user['password_hash'], password):
         return render_template('portal_login.html', error='Invalid username or password.'), 401
 
+    session.permanent = True
     session['logged_in'] = True
     session['username'] = user['username']
     session['full_name'] = user['full_name'] or user['username']
@@ -1901,6 +1925,7 @@ def api_login():
     if not user or not check_password_hash(user['password_hash'], password):
         return jsonify({"success": False, "message": "Invalid username or password."}), 401
 
+    session.permanent = True
     session['logged_in'] = True
     session['username'] = user['username']
     session['full_name'] = user['full_name'] or user['username']
